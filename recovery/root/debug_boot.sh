@@ -79,24 +79,32 @@ if [ -f /manifest_fixed.xml ]; then
         # 4. Synchronize: Restart managers AND security HALs to pick up new manifest
         log_msg "Restarting service managers and security HALs..."
         # Kill managers and HALs so they pick up the patched manifest
-        # We include vndservicemanager which is often overlooked on MTK
         killall -9 hwservicemanager keystore2 servicemanager vndservicemanager
-        # Use pkill -f to ensure we hit the full process names for HALs
+        # Kill security HALs using pkill -f for full process name matching
         pkill -9 -f "android.hardware.security.keymint"
         pkill -9 -f "android.hardware.gatekeeper"
         pkill -9 -f "tee-supplicant"
+        sleep 1
+
+        # CRITICAL: Restart service managers FIRST so binder context is available
+        log_msg "Restarting service managers..."
+        start servicemanager
+        start hwservicemanager
+        start vndservicemanager
         sleep 2
 
         # 5. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
         
-        # 6. Force start key security services to ensure they pick up property triggers
-        log_msg "Manually triggering service starts..."
+        # 6. Start security HALs AFTER service managers are back up
+        log_msg "Starting security HALs..."
+        start tee-supplicant
+        sleep 1
         start keymint-mitee
         start gatekeeper-1-0
+        sleep 1
         start keystore2
-        start tee-supplicant
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
         setprop twrp.vintf.ready 1
