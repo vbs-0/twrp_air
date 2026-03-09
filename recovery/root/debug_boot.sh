@@ -3,6 +3,11 @@
 LOGFILE="/tmp/debug_boot.log"
 exec > $LOGFILE 2>&1
 
+# Override problematic vendor manifest with compatible version
+echo "--- Applying VINTF Override ---"
+mount none /vendor/etc/vintf/manifest_fixed.xml /vendor/etc/vintf/manifest.xml bind
+echo "VINTF override applied: $?"
+
 echo "--- Debug Boot Log Start ---"
 date
 id
