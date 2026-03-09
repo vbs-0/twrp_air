@@ -76,32 +76,42 @@ if [ -f /manifest_fixed.xml ]; then
         chown 1000:1000 /tmp/keystore
         chmod 0700 /tmp/keystore
 
-        # 4. Synchronize: Restart managers AND security HALs to pick up new manifest
-        log_msg "Restarting service managers and security HALs..."
-        # Kill managers and HALs so they pick up the patched manifest
-        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager
-        # Kill security HALs using pkill -f for full process name matching
-        pkill -9 -f "android.hardware.security.keymint"
-        pkill -9 -f "android.hardware.gatekeeper"
-        pkill -9 -f "tee-supplicant"
+        # 4. Stop all security HALs via init (so init tracks state correctly)
+        log_msg "Stopping security HALs via init..."
+        stop keystore2
+        stop keymint-mitee
+        stop gatekeeper-1-0
+        stop tee-supplicant
+        # Also kill via process name in case init missed any
+        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager 2>/dev/null
+        pkill -9 -f "android.hardware.security.keymint" 2>/dev/null
+        pkill -9 -f "android.hardware.gatekeeper" 2>/dev/null
+        pkill -9 -f "tee-supplicant" 2>/dev/null
         sleep 1
 
-        # CRITICAL: Restart service managers FIRST so binder context is available
+        # 5. Restart service managers FIRST so binder context is available
         log_msg "Restarting service managers..."
         start servicemanager
         start hwservicemanager
         start vndservicemanager
         sleep 2
 
-        # 5. Signal that VINTF is patched and ready for fresh service startup
+        # 6. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
-        
-        # 6. Start security HALs AFTER service managers are back up
-        log_msg "Starting security HALs..."
+
+        # 7. Start TEE supplicant first and wait for it to fully initialize
+        log_msg "Starting tee-supplicant..."
         start tee-supplicant
-        sleep 1
+        sleep 3
+
+        # 8. Now start keymint-mitee (needs tee-supplicant TEE context ready)
+        log_msg "Starting keymint-mitee..."
         start keymint-mitee
+        sleep 2
+
+        # 9. Start gatekeeper and keystore2 last
+        log_msg "Starting gatekeeper and keystore2..."
         start gatekeeper-1-0
         sleep 1
         start keystore2
