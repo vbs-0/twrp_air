@@ -30,8 +30,8 @@ on fs
     chown system system /dev/tee0
     chown system system /dev/teepriv0
     
-    # Early VINTF override
-    mount none /vendor/etc/vintf/manifest_fixed.xml /vendor/etc/vintf/manifest.xml bind
+    # VINTF override handled by debug_boot.sh to ensure /vendor is ready
+
 
 
 on post-fs
@@ -102,7 +102,6 @@ service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-servi
     user system
     group system drmrpc
     interface hwbinder android.hardware.keymaster@4.0::IKeymasterDevice default
-    interface hwbinder android.hardware.keymaster@4.1::IKeymasterDevice default
     interface aidl android.hardware.security.keymint.IKeyMintDevice/default
     interface aidl android.hardware.security.sharedsecret.ISharedSecret/default
     interface aidl android.hardware.security.secureclock.ISecureClock/default
