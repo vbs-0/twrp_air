@@ -28,7 +28,7 @@ on fs
     chown system system /dev/0:0:0:49476
     chown system system /dev/ufs-bsg0
 #    enable vendor.keymaster-4-0-mitee
-    enable keymint-mitee
+#    enable keymint-mitee  # Moved: now started via debug_boot.sh after VINTF patch
     mkdir /mnt/vendor/persist/data 0755 system system
     mkdir /mnt/vendor/persist/fdsd 0755 system system
     setprop vendor.teefs_state ready
