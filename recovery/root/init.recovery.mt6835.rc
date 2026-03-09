@@ -40,6 +40,7 @@ on post-fs
     chown root root /tmp/keystore
     
     # Run debug_boot early to apply VINTF override before HALs start
+    # Start debug_boot script early to manage VINTF and SELinux
     start debug_boot
 
     # Restart managers to pick up new manifest (handled by debug_boot.sh too, but safe here)
@@ -140,13 +141,14 @@ service vendor.vibrator-default /vendor/bin/hw/android.hardware.vibrator-service
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
     seclabel u:r:recovery:s0
 
-on property:hwservicemanager.ready=true
+# Start services only when both manager is ready AND VINTF is patched
+on property:hwservicemanager.ready=true && property:twrp.vintf.ready=1
     start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
     start keystore2
 
-on property:vendor.sys.listener.registered=true
+on property:vendor.sys.listener.registered=true && property:twrp.vintf.ready=1
     start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
@@ -180,7 +182,6 @@ service debug_boot /system/bin/sh /debug_boot.sh
     oneshot
     seclabel u:r:recovery:s0
 
-on property:hwservicemanager.ready=true
-    start debug_boot
+# Removed redundant debug_boot trigger (started in post-fs)
 
 

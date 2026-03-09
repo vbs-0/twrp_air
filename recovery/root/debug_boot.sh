@@ -34,30 +34,37 @@ if [ -f /manifest_fixed.xml ]; then
     done
     
     if [ -d /vendor/etc/vintf ]; then
-        log_msg "Applying FULL VINTF override via tmpfs..."
-        # Backup the directory content
+        log_msg "Applying VINTF overrides via tmpfs and bind-mounts..."
+        
+        # 1. Overlay /vendor/etc/vintf
         mkdir -p /tmp/vintf_backup
         cp -a /vendor/etc/vintf/* /tmp/vintf_backup/
-        
-        # Mount tmpfs over the directory
         mount -t tmpfs tmpfs /vendor/etc/vintf
         if [ $? -eq 0 ]; then
             cp -a /tmp/vintf_backup/* /vendor/etc/vintf/
             cp /manifest_fixed.xml /vendor/etc/vintf/manifest.xml
-            log_msg "Tmpfs VINTF Override applied successfully."
-        else
-            log_msg "CRITICAL: Tmpfs mount failed. Trying individual bind-mount..."
-            cp /manifest_fixed.xml /tmp/manifest_custom.xml
-            mount -o bind /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
-            log_msg "Bind-mount status: $?"
+            log_msg "Tmpfs /vendor/etc/vintf override applied."
         fi
-        
-        # Restart managers to pick up the new manifest
+
+        # 2. Patch /vendor/manifest.xml (important for some HALs)
+        # Even if it doesn't exist, bind-mounting ensures it's found
+        touch /tmp/manifest_custom.xml
+        cp /manifest_fixed.xml /tmp/manifest_custom.xml
+        mount -o bind /tmp/manifest_custom.xml /vendor/manifest.xml
+        log_msg "Bind-mount /vendor/manifest.xml status: $?"
+
+        # 3. Synchronize: Signal that VINTF is patched
+        setprop twrp.vintf.ready 1
+        log_msg "Property twrp.vintf.ready set to 1."
+
+        # 4. Restart managers to pick up new manifest
         log_msg "Restarting service managers..."
         killall -9 hwservicemanager keystore2 servicemanager
         sleep 2
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Skipping override."
+        # Fallback to signal ready anyway so boot continues (though perhaps broken)
+        setprop twrp.vintf.ready 1
     fi
 else
     log_msg "CRITICAL: /manifest_fixed.xml not found! Skipping VINTF patch."
