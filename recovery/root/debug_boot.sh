@@ -8,12 +8,34 @@ date
 id
 getenforce
 
-# --- 1. VINTF Override Verification ---
+# --- 1. VINTF dynamic patching ---
 echo ""
-echo "--- VINTF Manifest Check ---"
-# Apply the bind-mount if not already applied
-mount none /vendor/etc/vintf/manifest_fixed.xml /vendor/etc/vintf/manifest.xml bind
-echo "VINTF Bind-Mount Status: $?"
+echo "--- Waiting for Vendor Mount ---"
+# Wait up to 10 seconds for real vendor partition to be mounted
+TIMER=0
+while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
+    sleep 1
+    TIMER=$((TIMER + 1))
+done
+
+if [ -f /vendor/etc/vintf/manifest.xml ]; then
+    echo "Patching real vendor manifest..."
+    cp /vendor/etc/vintf/manifest.xml /tmp/manifest_real.xml
+    # Resolve the 4.1 vs 4.0 conflict by forcing 4.0
+    sed -i 's/version="4.1"/version="4.0"/g' /tmp/manifest_real.xml
+    mount none /tmp/manifest_real.xml /vendor/etc/vintf/manifest.xml bind
+    echo "VINTF Patch applied. Status: $?"
+    
+    # Restart managers ONE LAST TIME to pick up the patched manifest
+    echo "Restarting service managers for the final time..."
+    setprop hwservicemanager.ready false
+    killall -9 hwservicemanager keystore2 servicemanager
+    # These will be restarted by init because they are not 'disabled'
+else
+    echo "CRITICAL: Vendor manifest not found even after wait!"
+    # Fallback to our hardcoded fixed manifest
+    mount none /vendor/etc/vintf/manifest_fixed.xml /vendor/etc/vintf/manifest.xml bind
+fi
 
 # Check if we can run vintf_check (if present in TWRP)
 if [ -x "/system/bin/vintf_check" ]; then
