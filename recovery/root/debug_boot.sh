@@ -13,55 +13,56 @@ exec > $LOGFILE 2>&1
 log_msg "--- TWRP ENHANCED DEBUG BOOT START ---"
 date
 id
+# Disable SELinux early to ensure all diagnostic tools and mounts work
+log_msg "Disabling SELinux Enforcement..."
+setenforce 0
 getenforce
 
 # --- 1. VINTF dynamic patching ---
-log_msg "--- Waiting for Vendor Mount ---"
-# Wait up to 10 seconds for real vendor partition to be mounted
-TIMER=0
-while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
-    sleep 1
-    TIMER=$((TIMER + 1))
-done
+log_msg "--- Checking for VINTF override ---"
 
-if [ -f /vendor/etc/vintf/manifest_fixed.xml ]; then
-    log_msg "Applying FULL VINTF override with manifest_fixed.xml..."
-    # Copy our fixed manifest to tmp to ensure it's writable/bindable
-    cp /vendor/etc/vintf/manifest_fixed.xml /tmp/manifest_custom.xml
-    chmod 644 /tmp/manifest_custom.xml
+# The manifest_fixed.xml should be in the root of the ramdisk (/)
+# to avoid being hidden by the /vendor mount.
+if [ -f /manifest_fixed.xml ]; then
+    log_msg "Found /manifest_fixed.xml. Waiting for /vendor/etc/vintf to be ready..."
     
-    # Try forcefully bind-mounting over the real vendor manifest
-    mount -o bind /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
-    BIND_STATUS=$?
-    log_msg "Bind-mount VINTF Override Status: $BIND_STATUS"
+    # Wait for /vendor/etc/vintf directory to exist
+    TIMER=0
+    while [ ! -d /vendor/etc/vintf ] && [ $TIMER -lt 15 ]; do
+        sleep 1
+        TIMER=$((TIMER + 1))
+    done
     
-    if [ $BIND_STATUS -ne 0 ]; then
-        log_msg "Bind-mount failed. Attempting tmpfs override on /vendor/etc/vintf..."
-        # Backup the directory content if possible
+    if [ -d /vendor/etc/vintf ]; then
+        log_msg "Applying FULL VINTF override via tmpfs..."
+        # Backup the directory content
         mkdir -p /tmp/vintf_backup
-        cp /vendor/etc/vintf/* /tmp/vintf_backup/
+        cp -a /vendor/etc/vintf/* /tmp/vintf_backup/
         
         # Mount tmpfs over the directory
         mount -t tmpfs tmpfs /vendor/etc/vintf
         if [ $? -eq 0 ]; then
-            cp /tmp/vintf_backup/* /vendor/etc/vintf/
-            cp /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
+            cp -a /tmp/vintf_backup/* /vendor/etc/vintf/
+            cp /manifest_fixed.xml /vendor/etc/vintf/manifest.xml
             log_msg "Tmpfs VINTF Override applied successfully."
         else
-            log_msg "CRITICAL: Tmpfs mount failed. Cannot override VINTF."
+            log_msg "CRITICAL: Tmpfs mount failed. Trying individual bind-mount..."
+            cp /manifest_fixed.xml /tmp/manifest_custom.xml
+            mount -o bind /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
+            log_msg "Bind-mount status: $?"
         fi
+        
+        # Restart managers to pick up the new manifest
+        log_msg "Restarting service managers..."
+        killall -9 hwservicemanager keystore2 servicemanager
+        sleep 2
+    else
+        log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Skipping override."
     fi
-    
-    # Restart managers to pick up the new manifest
-    log_msg "Restarting service managers..."
-    sleep 1
-    killall -9 hwservicemanager keystore2 servicemanager
-    # Keystore2 might need to be explicitly started if it doesn't restart automatically
-    # but we'll let init handle it first once it sees the trigger.
-    sleep 1
 else
-    log_msg "CRITICAL: /vendor/etc/vintf/manifest_fixed.xml not found!"
+    log_msg "CRITICAL: /manifest_fixed.xml not found! Skipping VINTF patch."
 fi
+
 
 # Check if we can run vintf_check (if present in TWRP)
 if [ -x "/system/bin/vintf_check" ]; then
