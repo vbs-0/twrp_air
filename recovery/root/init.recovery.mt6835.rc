@@ -35,10 +35,15 @@ on fs
 
 
 on post-fs
+    # Create keystore directory
+    mkdir /tmp/keystore 0775 root root
+    chown root root /tmp/keystore
+    
     # Restart managers to pick up new manifest
     restart servicemanager
     restart hwservicemanager
-    restart keystore2
+    # keystore2 will be started manually later
+    # restart keystore2
     start vndservicemanager
     start boot-hal-1-2
     exec u:r:update_engine:s0 root root -- /system/bin/mtk_plpath_utils
@@ -113,6 +118,7 @@ service keystore2 /system/bin/keystore2 /tmp/keystore
     user root
     group root
     interface aidl android.system.keystore2.IKeystoreService default
+    disabled
     seclabel u:r:recovery:s0
 
 
@@ -135,11 +141,13 @@ on property:hwservicemanager.ready=true
     start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
+    start keystore2
 
 on property:vendor.sys.listener.registered=true
     start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
+    start keystore2
    
 on property:ro.crypto.state=unsupported
     stop tee-supplicant

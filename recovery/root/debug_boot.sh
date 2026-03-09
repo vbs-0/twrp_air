@@ -19,18 +19,20 @@ while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
 done
 
 if [ -f /vendor/etc/vintf/manifest.xml ]; then
-    echo "Patching real vendor manifest..."
-    cp /vendor/etc/vintf/manifest.xml /tmp/manifest_real.xml
-    # Resolve the 4.1 vs 4.0 conflict by forcing 4.0
-    sed -i 's/version="4.1"/version="4.0"/g' /tmp/manifest_real.xml
-    mount none /tmp/manifest_real.xml /vendor/etc/vintf/manifest.xml bind
-    echo "VINTF Patch applied. Status: $?"
+    echo "Applying FULL VINTF override with manifest_fixed.xml..."
+    # Copy our fixed manifest to tmp to ensure it's writable/bindable if needed
+    cp /vendor/etc/vintf/manifest_fixed.xml /tmp/manifest_custom.xml
     
-    # Restart managers ONE LAST TIME to pick up the patched manifest
-    echo "Restarting service managers for the final time..."
+    # Forcefully bind-mount over the real vendor manifest
+    mount none /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml bind
+    echo "VINTF Override applied. Status: $?"
+    
+    # Restart managers to pick up the new manifest
+    echo "Restarting service managers..."
     setprop hwservicemanager.ready false
     killall -9 hwservicemanager keystore2 servicemanager
-    # These will be restarted by init because they are not 'disabled'
+    # Restart them via setprop or let init do it
+    setprop hwservicemanager.ready true
 else
     echo "CRITICAL: Vendor manifest not found even after wait!"
     # Fallback to our hardcoded fixed manifest
@@ -78,8 +80,12 @@ lshal | grep -E "keymaster|gatekeeper|health|boot|vibrator"
 # --- 7. Critical Logs ---
 echo ""
 echo "--- Last 50 Lines of Logcat (Errors) ---"
-logcat -d -L | tail -n 50 2>/dev/null # Previous boot logs if available
+logcat -d -L | tail -n 50 2>/dev/null 
 logcat -d *:E | tail -n 50
+
+# --- 7b. Check Keystore Directory ---
+ls -ld /tmp/keystore
+ls -l /tmp/keystore
 
 # --- 8. Properties ---
 echo ""
