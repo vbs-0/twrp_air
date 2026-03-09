@@ -82,26 +82,16 @@ if [ -f /manifest_fixed.xml ]; then
         stop keymint-mitee
         stop gatekeeper-1-0
         stop tee-supplicant
-
-        log_msg "Stopping service managers gracefully..."
-        stop servicemanager
-        stop hwservicemanager
-        stop vndservicemanager
         sleep 1
 
         # Also kill via process name in case init missed any
-        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager 2>/dev/null
+        pkill -9 -f "keystore2" 2>/dev/null
         pkill -9 -f "android.hardware.security.keymint" 2>/dev/null
         pkill -9 -f "android.hardware.gatekeeper" 2>/dev/null
         pkill -9 -f "tee-supplicant" 2>/dev/null
         sleep 1
 
-        # 5. Restart service managers FIRST so binder context is available
-        log_msg "Restarting service managers..."
-        start servicemanager
-        start hwservicemanager
-        start vndservicemanager
-        sleep 2
+
 
         # 6. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
