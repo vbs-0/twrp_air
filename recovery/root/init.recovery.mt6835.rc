@@ -94,7 +94,18 @@ service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-servi
     class early_hal
     user system
     group system drmrpc
+    interface aidl android.hardware.security.keymint.IKeyMintDevice/default
+    interface aidl android.hardware.security.keymint.IRemotelyProvisionedComponent/default
+    interface aidl android.hardware.security.sharedsecret.ISharedSecret/default
+    interface aidl android.hardware.security.secureclock.ISecureClock/default
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
+    seclabel u:r:recovery:s0
+
+service keystore2 /system/bin/keystore2 /tmp/keystore
+    class early_hal
+    user root
+    group root
+    interface aidl android.system.keystore2.IKeystoreService/default
     seclabel u:r:recovery:s0
 
 service gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
