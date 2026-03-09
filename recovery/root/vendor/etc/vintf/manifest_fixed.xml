@@ -1,4 +1,5 @@
 <manifest version="1.0" type="device" target-level="6">
+    <!-- HIDL Managers -->
     <hal format="hidl">
         <name>android.hidl.manager</name>
         <transport>hwbinder</transport>
@@ -26,9 +27,12 @@
             <instance>ashmem</instance>
         </interface>
     </hal>
+
+    <!-- Keymaster/KeyMint -->
     <hal format="hidl">
         <name>android.hardware.keymaster</name>
         <transport>hwbinder</transport>
+        <version>4.0</version>
         <version>4.1</version>
         <interface>
             <name>IKeymasterDevice</name>
@@ -37,18 +41,32 @@
     </hal>
     <hal format="aidl">
         <name>android.hardware.security.keymint</name>
-        <version>2</version>
-        <fqname>IKeyMintDevice/default</fqname>
-        <fqname>IRemotelyProvisionedComponent/default</fqname>
+        <version>1</version>
+        <interface>
+            <name>IKeyMintDevice</name>
+            <instance>default</instance>
+        </interface>
+        <interface>
+            <name>IRemotelyProvisionedComponent</name>
+            <instance>default</instance>
+        </interface>
     </hal>
     <hal format="aidl">
         <name>android.hardware.security.secureclock</name>
-        <fqname>ISecureClock/default</fqname>
+        <interface>
+            <name>ISecureClock</name>
+            <instance>default</instance>
+        </interface>
     </hal>
     <hal format="aidl">
         <name>android.hardware.security.sharedsecret</name>
-        <fqname>ISharedSecret/default</fqname>
+        <interface>
+            <name>ISharedSecret</name>
+            <instance>default</instance>
+        </interface>
     </hal>
+
+    <!-- Gatekeeper -->
     <hal format="hidl">
         <name>android.hardware.gatekeeper</name>
         <transport>hwbinder</transport>
@@ -58,6 +76,8 @@
             <instance>default</instance>
         </interface>
     </hal>
+
+    <!-- Keystore Framework Service -->
     <hal format="aidl">
         <name>android.system.keystore2</name>
         <version>1</version>
@@ -66,45 +86,8 @@
             <instance>default</instance>
         </interface>
     </hal>
-    <hal format="hidl">
-        <name>android.hardware.audio</name>
-        <transport>hwbinder</transport>
-        <version>7.1</version>
-        <interface>
-            <name>IDevicesFactory</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@7.1::IDevicesFactory/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.audio.effect</name>
-        <transport>hwbinder</transport>
-        <version>7.0</version>
-        <interface>
-            <name>IEffectsFactory</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@7.0::IEffectsFactory/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.bluetooth</name>
-        <transport>hwbinder</transport>
-        <version>1.1</version>
-        <interface>
-            <name>IBluetoothHci</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@1.1::IBluetoothHci/default</fqname>
-    </hal>
-    <hal format="aidl">
-        <name>android.hardware.bluetooth.audio</name>
-        <version>2</version>
-        <interface>
-            <name>IBluetoothAudioProviderFactory</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>IBluetoothAudioProviderFactory/default</fqname>
-    </hal>
+
+    <!-- Core Graphics/Boot HALs -->
     <hal format="hidl">
         <name>android.hardware.boot</name>
         <transport>hwbinder</transport>
@@ -113,7 +96,6 @@
             <name>IBootControl</name>
             <instance>default</instance>
         </interface>
-        <fqname>@1.0::IBootControl/default</fqname>
     </hal>
     <hal format="hidl">
         <name>android.hardware.graphics.allocator</name>
@@ -123,7 +105,6 @@
             <name>IAllocator</name>
             <instance>default</instance>
         </interface>
-        <fqname>@4.0::IAllocator/default</fqname>
     </hal>
     <hal format="hidl">
         <name>android.hardware.graphics.mapper</name>
@@ -133,71 +114,9 @@
             <name>IMapper</name>
             <instance>default</instance>
         </interface>
-        <fqname>@4.0::IMapper/default</fqname>
     </hal>
-    <hal format="aidl">
-        <name>android.hardware.radio.config</name>
-        <fqname>IRadioConfig/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.renderscript</name>
-        <transport arch="32+64">passthrough</transport>
-        <version>1.0</version>
-        <interface>
-            <name>IDevice</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@1.0::IDevice/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.soundtrigger</name>
-        <transport>hwbinder</transport>
-        <version>2.3</version>
-        <interface>
-            <name>ISoundTriggerHw</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@2.3::ISoundTriggerHw/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>android.hardware.thermal</name>
-        <transport>hwbinder</transport>
-        <version>1.0</version>
-        <version>2.0</version>
-        <interface>
-            <name>IThermal</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@1.0::IThermal/default</fqname>
-        <fqname>@2.0::IThermal/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>vendor.mediatek.hardware.aee</name>
-        <transport>hwbinder</transport>
-        <version>1.1</version>
-        <interface>
-            <name>IAee</name>
-            <instance>AEE</instance>
-            <instance>default</instance>
-        </interface>
-        <fqname>@1.1::IAee/AEE</fqname>
-        <fqname>@1.1::IAee/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>vendor.mediatek.hardware.mtkpower</name>
-        <transport>hwbinder</transport>
-        <version>1.2</version>
-        <interface>
-            <name>IMtkPerf</name>
-            <instance>default</instance>
-        </interface>
-        <interface>
-            <name>IMtkPower</name>
-            <instance>default</instance>
-        </interface>
-        <fqname>@1.2::IMtkPerf/default</fqname>
-        <fqname>@1.2::IMtkPower/default</fqname>
-    </hal>
+
+    <!-- MTK Specific HALs -->
     <hal format="hidl">
         <name>vendor.mediatek.hardware.nvram</name>
         <transport>hwbinder</transport>
@@ -206,8 +125,8 @@
             <name>INvram</name>
             <instance>default</instance>
         </interface>
-        <fqname>@1.1::INvram/default</fqname>
     </hal>
+
     <sepolicy>
         <version>32.0</version>
     </sepolicy>
