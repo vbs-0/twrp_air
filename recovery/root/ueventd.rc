@@ -84,6 +84,10 @@
 # teeperf driver
 /dev/teeperf              0666   system     system
 
+# MiTEE nodes
+/dev/tee0                 0660   system     system
+/dev/teepriv0             0660   system     system
+
 #v4l2 device
 /dev/video*      0660 camera system
 /dev/media*      0660 camera system

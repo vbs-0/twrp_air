@@ -18,6 +18,10 @@ log_msg "Disabling SELinux Enforcement..."
 setenforce 0
 getenforce
 
+# Reset the synchronization property to ensure any subsequent triggers re-fire
+setprop twrp.vintf.ready 0
+log_msg "Reset twrp.vintf.ready to 0"
+
 # --- 1. VINTF dynamic patching ---
 log_msg "--- Checking for VINTF override ---"
 
@@ -72,15 +76,16 @@ if [ -f /manifest_fixed.xml ]; then
         chown 1000:1000 /tmp/keystore
         chmod 0700 /tmp/keystore
 
-        # 4. Synchronize: Signal that VINTF is patched
+        # 4. Synchronize: Restart managers AND security HALs to pick up new manifest
+        log_msg "Restarting service managers and security HALs..."
+        # Kill managers and HALs so they pick up the patched manifest
+        # We include vndservicemanager which is often overlooked on MTK
+        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager tee-supplicant keymint-mitee gatekeeper-1-0
+        sleep 2
+
+        # 5. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
-
-        # 5. Restart managers AND security HALs to pick up new manifest and binder context
-        log_msg "Restarting service managers and security HALs..."
-        # Kill both managers and the actual HAL services so init restarts them all
-        killall -9 hwservicemanager keystore2 servicemanager tee-supplicant keymint-mitee gatekeeper-1-0
-        sleep 2
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
         setprop twrp.vintf.ready 1

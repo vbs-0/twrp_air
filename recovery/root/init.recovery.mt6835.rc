@@ -24,11 +24,7 @@ on init
     
 on fs
     install_keyring
-    # Fix permissions on TEE device nodes so tee-supplicant can access them
-    chmod 0660 /dev/tee0
-    chmod 0660 /dev/teepriv0
-    chown system system /dev/tee0
-    chown system system /dev/teepriv0
+    # TEE device node permissions are now handled by ueventd.rc
     
     # VINTF override handled by debug_boot.sh to ensure /vendor is ready
 
