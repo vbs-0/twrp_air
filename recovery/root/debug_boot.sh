@@ -34,24 +34,37 @@ if [ -f /manifest_fixed.xml ]; then
     done
     
     if [ -d /vendor/etc/vintf ]; then
-        log_msg "Applying VINTF overrides via tmpfs and bind-mounts..."
+        log_msg "Applying VINTF overrides surgically..."
         
-        # 1. Overlay /vendor/etc/vintf
-        mkdir -p /tmp/vintf_backup
-        cp -a /vendor/etc/vintf/* /tmp/vintf_backup/
-        mount -t tmpfs tmpfs /vendor/etc/vintf
-        if [ $? -eq 0 ]; then
-            cp -a /tmp/vintf_backup/* /vendor/etc/vintf/
-            cp /manifest_fixed.xml /vendor/etc/vintf/manifest.xml
-            log_msg "Tmpfs /vendor/etc/vintf override applied."
+        # 1. Overlay /vendor/etc/vintf using tmpfs to avoid breaking /odm symlinks
+        # Check if /odm is a symlink to /vendor/odm
+        if [ -L /odm ]; then
+            log_msg "/odm is a symlink: $(ls -ld /odm)"
         fi
 
-        # 2. Patch /vendor/manifest.xml (important for some HALs)
-        # Even if it doesn't exist, bind-mounting ensures it's found
-        touch /tmp/manifest_custom.xml
-        cp /manifest_fixed.xml /tmp/manifest_custom.xml
-        mount -o bind /tmp/manifest_custom.xml /vendor/manifest.xml
-        log_msg "Bind-mount /vendor/manifest.xml status: $?"
+        # Use a more targeted approach. If we can't mount tmpfs safely, we just try to bind-mount the files.
+        # But tmpfs is usually better if it doesn't break underlying links.
+        # To be safe, we only patch the EXACT files we need.
+        
+        # Patch /vendor/etc/vintf/manifest.xml
+        if [ -f /vendor/etc/vintf/manifest.xml ]; then
+            mount -o bind /manifest_fixed.xml /vendor/etc/vintf/manifest.xml
+            log_msg "Bind-mount /vendor/etc/vintf/manifest.xml status: $?"
+        fi
+
+        # Patch /vendor/manifest.xml
+        if [ -f /vendor/manifest.xml ]; then
+            mount -o bind /manifest_fixed.xml /vendor/manifest.xml
+            log_msg "Bind-mount /vendor/manifest.xml status: $?"
+        fi
+
+        # 2. Patch /odm/etc/vintf/manifest_c3vinl.xml to prevent the "Too many symbolic links" error
+        # If the error is "Too many symbolic links", it means the system is chasing a loop.
+        # We can try to bind-mount our manifest over the problematic ODM manifest too.
+        if [ -f /odm/etc/vintf/manifest_c3vinl.xml ]; then
+            mount -o bind /manifest_fixed.xml /odm/etc/vintf/manifest_c3vinl.xml
+            log_msg "Bind-mount /odm/etc/vintf/manifest_c3vinl.xml status: $?"
+        fi
 
         # 3. Synchronize: Signal that VINTF is patched
         setprop twrp.vintf.ready 1
@@ -62,8 +75,7 @@ if [ -f /manifest_fixed.xml ]; then
         killall -9 hwservicemanager keystore2 servicemanager
         sleep 2
     else
-        log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Skipping override."
-        # Fallback to signal ready anyway so boot continues (though perhaps broken)
+        log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
         setprop twrp.vintf.ready 1
     fi
 else
