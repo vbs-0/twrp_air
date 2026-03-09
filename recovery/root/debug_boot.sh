@@ -66,13 +66,20 @@ if [ -f /manifest_fixed.xml ]; then
             log_msg "Bind-mount /odm/etc/vintf/manifest_c3vinl.xml status: $?"
         fi
 
-        # 3. Synchronize: Signal that VINTF is patched
+        # 3. Create writable Keystore2 directory
+        log_msg "Setting up /tmp/keystore..."
+        mkdir -p /tmp/keystore
+        chown 1000:1000 /tmp/keystore
+        chmod 0700 /tmp/keystore
+
+        # 4. Synchronize: Signal that VINTF is patched
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
 
-        # 4. Restart managers to pick up new manifest
-        log_msg "Restarting service managers..."
-        killall -9 hwservicemanager keystore2 servicemanager
+        # 5. Restart managers AND security HALs to pick up new manifest and binder context
+        log_msg "Restarting service managers and security HALs..."
+        # Kill both managers and the actual HAL services so init restarts them all
+        killall -9 hwservicemanager keystore2 servicemanager tee-supplicant keymint-mitee gatekeeper-1-0
         sleep 2
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
