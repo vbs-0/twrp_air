@@ -82,6 +82,13 @@ if [ -f /manifest_fixed.xml ]; then
         stop keymint-mitee
         stop gatekeeper-1-0
         stop tee-supplicant
+
+        log_msg "Stopping service managers gracefully..."
+        stop servicemanager
+        stop hwservicemanager
+        stop vndservicemanager
+        sleep 1
+
         # Also kill via process name in case init missed any
         killall -9 hwservicemanager keystore2 servicemanager vndservicemanager 2>/dev/null
         pkill -9 -f "android.hardware.security.keymint" 2>/dev/null
