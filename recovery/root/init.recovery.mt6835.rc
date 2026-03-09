@@ -115,11 +115,6 @@ service keystore2 /system/bin/keystore2 /tmp/keystore
     interface aidl android.system.keystore2.IKeystoreService/default
     seclabel u:r:recovery:s0
 
-service vndservicemanager /vendor/bin/vndservicemanager /dev/vndbinder
-    class core
-    user system
-    group system readproc
-    seclabel u:r:recovery:s0
 
 service gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
     interface android.hardware.gatekeeper@1.0::IGatekeeper default
