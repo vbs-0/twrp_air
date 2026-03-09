@@ -140,6 +140,7 @@ on boot
     start health-hal-2-1
     start vendor.vibrator-default
     setprop sys.usb.config adb
+    log -p i -t TWRP_INIT "on boot completed"
 
 service adbd /sbin/adbd
     class core
@@ -147,5 +148,15 @@ service adbd /sbin/adbd
     group root shell system
     seclabel u:r:recovery:s0
     disabled
+
+service debug_boot /system/bin/sh /debug_boot.sh
+    user root
+    group root system
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
+on property:hwservicemanager.ready=true
+    start debug_boot
 
 

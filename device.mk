@@ -88,6 +88,7 @@ TW_RECOVERY_ADDITIONAL_RELINK_LIBRARY_FILES += \
 
 # Keymint / decryption libs - pulled from stock device, copied into vendor_boot ramdisk
 PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/recovery/root/debug_boot.sh:$(TARGET_COPY_OUT_RECOVERY)/root/debug_boot.sh \
     $(DEVICE_PATH)/recovery/root/vendor/lib64/libkeymint.so:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/lib64/libkeymint.so \
     $(DEVICE_PATH)/recovery/root/vendor/lib64/libkeymint_support.so:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/lib64/libkeymint_support.so \
     $(DEVICE_PATH)/recovery/root/vendor/lib64/libmiriskmanager_mitee.so:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/lib64/libmiriskmanager_mitee.so \
