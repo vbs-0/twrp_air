@@ -80,7 +80,11 @@ if [ -f /manifest_fixed.xml ]; then
         log_msg "Restarting service managers and security HALs..."
         # Kill managers and HALs so they pick up the patched manifest
         # We include vndservicemanager which is often overlooked on MTK
-        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager tee-supplicant keymint-mitee gatekeeper-1-0
+        killall -9 hwservicemanager keystore2 servicemanager vndservicemanager
+        # Use pkill -f to ensure we hit the full process names for HALs
+        pkill -9 -f "android.hardware.security.keymint"
+        pkill -9 -f "android.hardware.gatekeeper"
+        pkill -9 -f "tee-supplicant"
         sleep 2
 
         # 5. Signal that VINTF is patched and ready for fresh service startup

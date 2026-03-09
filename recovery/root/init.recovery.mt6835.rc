@@ -117,7 +117,7 @@ service keystore2 /system/bin/keystore2 /tmp/keystore
     class early_hal
     user root
     group root
-    interface android.system.keystore2.IKeystoreService default
+    interface aidl android.system.keystore2.IKeystoreService/default
     disabled
     seclabel u:r:recovery:s0
 
