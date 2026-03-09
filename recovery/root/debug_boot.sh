@@ -90,6 +90,13 @@ if [ -f /manifest_fixed.xml ]; then
         # 5. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
+        
+        # 6. Force start key security services to ensure they pick up property triggers
+        log_msg "Manually triggering service starts..."
+        start keymint-mitee
+        start gatekeeper-1-0
+        start keystore2
+        start tee-supplicant
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
         setprop twrp.vintf.ready 1

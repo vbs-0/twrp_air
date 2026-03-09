@@ -106,9 +106,9 @@ service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-servi
     user system
     group system drmrpc
     interface android.hardware.keymaster@4.0::IKeymasterDevice default
-    interface android.hardware.security.keymint.IKeyMintDevice default
-    interface android.hardware.security.sharedsecret.ISharedSecret default
-    interface android.hardware.security.secureclock.ISecureClock default
+    interface aidl android.hardware.security.keymint.IKeyMintDevice/default
+    interface aidl android.hardware.security.sharedsecret.ISharedSecret/default
+    interface aidl android.hardware.security.secureclock.ISecureClock/default
     setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
     disabled
     seclabel u:r:recovery:s0
