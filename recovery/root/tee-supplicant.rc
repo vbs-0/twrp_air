@@ -33,3 +33,6 @@ on fs
     mkdir /mnt/vendor/persist/fdsd 0755 system system
     setprop vendor.teefs_state ready
     setprop ro.hardware.gatekeeper mitee
+    
+    # Start tee-supplicant immediately so it handles any early TEE ioctls without hanging
+    start tee-supplicant
