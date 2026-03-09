@@ -28,17 +28,37 @@ if [ -f /vendor/etc/vintf/manifest_fixed.xml ]; then
     log_msg "Applying FULL VINTF override with manifest_fixed.xml..."
     # Copy our fixed manifest to tmp to ensure it's writable/bindable
     cp /vendor/etc/vintf/manifest_fixed.xml /tmp/manifest_custom.xml
+    chmod 644 /tmp/manifest_custom.xml
     
-    # Forcefully bind-mount over the real vendor manifest
-    mount none /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml bind
-    log_msg "VINTF Override applied. Status: $?"
+    # Try forcefully bind-mounting over the real vendor manifest
+    mount -o bind /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
+    BIND_STATUS=$?
+    log_msg "Bind-mount VINTF Override Status: $BIND_STATUS"
+    
+    if [ $BIND_STATUS -ne 0 ]; then
+        log_msg "Bind-mount failed. Attempting tmpfs override on /vendor/etc/vintf..."
+        # Backup the directory content if possible
+        mkdir -p /tmp/vintf_backup
+        cp /vendor/etc/vintf/* /tmp/vintf_backup/
+        
+        # Mount tmpfs over the directory
+        mount -t tmpfs tmpfs /vendor/etc/vintf
+        if [ $? -eq 0 ]; then
+            cp /tmp/vintf_backup/* /vendor/etc/vintf/
+            cp /tmp/manifest_custom.xml /vendor/etc/vintf/manifest.xml
+            log_msg "Tmpfs VINTF Override applied successfully."
+        else
+            log_msg "CRITICAL: Tmpfs mount failed. Cannot override VINTF."
+        fi
+    fi
     
     # Restart managers to pick up the new manifest
     log_msg "Restarting service managers..."
-    setprop hwservicemanager.ready false
-    killall -9 hwservicemanager keystore2 servicemanager
     sleep 1
-    setprop hwservicemanager.ready true
+    killall -9 hwservicemanager keystore2 servicemanager
+    # Keystore2 might need to be explicitly started if it doesn't restart automatically
+    # but we'll let init handle it first once it sees the trigger.
+    sleep 1
 else
     log_msg "CRITICAL: /vendor/etc/vintf/manifest_fixed.xml not found!"
 fi
