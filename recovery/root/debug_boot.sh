@@ -94,6 +94,16 @@ if [ -f /manifest_fixed.xml ]; then
         
         sleep 2
         
+        log_msg "--- KEYMINT EXEC LOG ---"
+        log_msg "$(cat /tmp/keymint_exec.log 2>/dev/null)"
+        log_msg "--- KEYSTORE2 EXEC LOG ---"
+        log_msg "$(cat /tmp/keystore2_exec.log 2>/dev/null)"
+        log_msg "--- GATEKEEPER EXEC LOG ---"
+        log_msg "$(cat /tmp/gatekeeper_exec.log 2>/dev/null)"
+        log_msg "--- TEE SUPPLICANT EXEC LOG ---"
+        log_msg "$(cat /tmp/tee_supplicant_exec.log 2>/dev/null)"
+        log_msg "------------------------"
+        
         # Explicitly start the security HALs just in case the property trigger is missed
         start tee-supplicant
         start gatekeeper-1-0
