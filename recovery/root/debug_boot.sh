@@ -84,8 +84,17 @@ if [ -f /manifest_fixed.xml ]; then
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
         
+        # --- PHASE 13 DIAGNOSTICS ---
+        # Manually execute the binaries to capture any missing library errors to /tmp
+        log_msg "Capturing binary execution errors..."
+        /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee > /tmp/keymint_exec.log 2>&1 &
+        /system/bin/keystore2 > /tmp/keystore2_exec.log 2>&1 &
+        /vendor/bin/hw/android.hardware.gatekeeper@1.0-service > /tmp/gatekeeper_exec.log 2>&1 &
+        /vendor/bin/hw/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+        
+        sleep 2
+        
         # Explicitly start the security HALs just in case the property trigger is missed
-        sleep 1
         start tee-supplicant
         start gatekeeper-1-0
         start keymint-mitee
