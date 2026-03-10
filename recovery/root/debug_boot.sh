@@ -21,8 +21,6 @@ getenforce
 
 # Ensure utilities are executable
 chmod 755 /system/bin/mtk_plpath_utils
-chmod 755 /system/bin/fb2png
-chmod 755 /sbin/fb2png 2>/dev/null
 
 # 1. Fix Block Device Paths
 log_msg "Fixing block device paths..."
