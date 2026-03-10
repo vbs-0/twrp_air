@@ -116,6 +116,49 @@ start keystore2
 
 
 
+# 6. Load touch modules (safe insmod approach - avoids scp ordering issues)
+# Dependency chain: hf_manager -> xiaomi_tp -> lct_tp -> nt36528_spi
+# This runs AFTER all recovery modules are loaded, ensuring deps are satisfied.
+log_msg "--- Loading touch modules ---"
+
+insmod_safe() {
+    local mod="$1"
+    local name=$(basename $mod .ko)
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name already loaded, skipping"
+        return 0
+    fi
+    if [ ! -f "$mod" ]; then
+        log_msg "Touch: WARNING - $mod not found!"
+        return 1
+    fi
+    insmod "$mod" 2>&1
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name loaded OK"
+        return 0
+    else
+        log_msg "Touch: FAILED to load $name"
+        return 1
+    fi
+}
+
+# Step 1: hf_manager (high frequency manager, no deps)
+insmod_safe /lib/modules/hf_manager.ko
+
+# Step 2: xiaomi_tp (no deps)
+insmod_safe /lib/modules/xiaomi_tp.ko
+
+# Step 3: lct_tp (depends on hf_manager)
+insmod_safe /lib/modules/lct_tp.ko
+
+# Step 4: nt36528_spi (depends on lct_tp, xiaomi_tp, scp, charger_framework, mediatek-drm - already loaded)
+# Note: scp is loaded by TW_LOAD_VENDOR_BOOT_MODULES from vendor_boot ramdisk.
+# mediatek-drm, mtk_charger_framework, spi-mt65xx, mtk_tinysys_ipi are in modules.load.recovery.
+insmod_safe /lib/modules/nt36528_spi.ko
+
+log_msg "Touch module load complete"
+log_msg "Loaded touch modules: $(lsmod | grep -E 'nt36|lct_tp|xiaomi_tp|hf_manager' | awk '{print $1}' | tr '\n' ' ')"
+
 # 7. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
 getprop | grep -E 'init.svc.(tee|keystore|keymint|gatekeeper)|twrp|vintf|vold'
