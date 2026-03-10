@@ -83,6 +83,13 @@ if [ -f /manifest_fixed.xml ]; then
         # 6. Signal that VINTF is patched and ready for fresh service startup
         setprop twrp.vintf.ready 1
         log_msg "Property twrp.vintf.ready set to 1."
+
+        # Re-kill keystore2 and security HALs to force them to reload the newly bind-mounted manifest
+        pkill -9 keystore2
+        pkill -9 android.hardware.security.keymint
+        pkill -9 android.hardware.gatekeeper
+        pkill -9 tee-supplicant
+        log_msg "Restarted security services after VINTF patch."
         
         # --- PHASE 13 DIAGNOSTICS ---
         log_msg "--- DIRECTORY LISTING /vendor/bin/hw ---"
@@ -95,10 +102,10 @@ if [ -f /manifest_fixed.xml ]; then
         # Use the same LD_LIBRARY_PATH as the service
         export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
         
-        /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee > /tmp/keymint_exec.log 2>&1 &
+        /vendor/bin/hw/android.hardware.security.keymint-service.mitee > /tmp/keymint_exec.log 2>&1 &
         /system/bin/keystore2 /tmp/keystore > /tmp/keystore2_exec.log 2>&1 &
         /vendor/bin/hw/android.hardware.gatekeeper@1.0-service > /tmp/gatekeeper_exec.log 2>&1 &
-        /vendor/bin/hw/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+        /vendor/bin/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
         
         sleep 2
         

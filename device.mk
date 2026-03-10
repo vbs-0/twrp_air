@@ -112,7 +112,7 @@ PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/recovery/root/vendor/etc/vintf/manifest/android.hardware.security.keymint-service.mitee.xml:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/vintf/manifest/android.hardware.security.keymint-service.mitee.xml \
     $(DEVICE_PATH)/recovery/root/vendor/etc/vintf/manifest/android.hardware.security.secureclock-service.mitee.xml:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/vintf/manifest/android.hardware.security.secureclock-service.mitee.xml \
     $(DEVICE_PATH)/recovery/root/vendor/etc/vintf/manifest/android.hardware.security.sharedsecret-service.mitee.xml:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/vintf/manifest/android.hardware.security.sharedsecret-service.mitee.xml \
-    $(DEVICE_PATH)/recovery/root/vendor/etc/vintf/manifest_fixed.xml:$(TARGET_COPY_OUT_RECOVERY)/root/vendor/etc/vintf/manifest_fixed.xml
+    $(DEVICE_PATH)/recovery/root/vendor/etc/vintf/manifest_fixed.xml:$(TARGET_COPY_OUT_RECOVERY)/root/manifest_fixed.xml
 
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
