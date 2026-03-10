@@ -2,7 +2,7 @@
 /cache              ext4  /dev/block/by-name/rescue                 flags=display=Cache;backup=1;wipeingui;wipeduringfactoryreset
 /metadata           ext4  /dev/block/by-name/metadata               flags=display=Metadata;backup=1
 /storage            f2fs  /data/media/0                             flags=display="Internal Storage";usermrf;backup=1;fsflags="bind";removable
-/mnt/vendor/persist            ext4  /dev/block/by-name/persist                flags=display=Persist;mounttool
+/mnt/vendor/persist            ext4  /dev/block/by-name/persist                flags=display=Persist
 /persist_image      emmc  /dev/block/by-name/persist                flags=display=Persist;backup=1;flashimg
 /frp                emmc  /dev/block/by-name/frp                    flags=display=FRP;backup=1;flashimg
 /nvram              emmc  /dev/block/by-name/nvram                  flags=display=NVRAM;backup=1
