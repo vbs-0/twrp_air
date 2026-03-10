@@ -1,4 +1,5 @@
 #!/system/bin/sh
+set -x
 # TWRP Debug Boot Script - Enhanced Diagnostic Version
 LOGFILE="/tmp/debug_boot.log"
 
@@ -60,12 +61,27 @@ if [ -d /vendor/etc/vintf ]; then
     chown 1000:1000 /tmp/keystore
     chmod 0700 /tmp/keystore
 
-    # 5. Signal that VINTF is patched
+    # 5. SELinux Context Fixes (Critical for "Permission Denied" in permissive)
+    log_msg "Applying critical SELinux context fixes..."
+    # Fix entrypoint for mtk_plpath_utils (matches audit log)
+    chcon u:object_r:update_engine_exec:s0 /system/bin/mtk_plpath_utils 2>/dev/null
+    
+    # Fix device nodes for TEE
+    chcon u:object_r:tee_device:s0 /dev/teepriv0 2>/dev/null
+    chcon u:object_r:tee_device:s0 /dev/tee0 2>/dev/null
+    chmod 666 /dev/teepriv0 /dev/tee0 2>/dev/null
+
+    # Fix binary contexts for keymint/keystore/supplicant
+    chcon u:object_r:recovery_exec:s0 /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee 2>/dev/null
+    chcon u:object_r:recovery_exec:s0 /system/bin/keystore2 2>/dev/null
+    chcon u:object_r:recovery_exec:s0 /vendor/bin/tee-supplicant 2>/dev/null
+    chcon u:object_r:recovery_exec:s0 /vendor/bin/mitee_supplicant 2>/dev/null
+
+    # 6. Signal that VINTF is patched
     setprop twrp.vintf.ready 1
     log_msg "Property twrp.vintf.ready set to 1."
 
-    # 6. Kill services to force reload
-    # We do this BEFORE manual starts to ensure init doesn't have stale handles
+    # 7. Kill services to force reload
     pkill -9 keystore2
     pkill -9 android.hardware.security.keymint
     pkill -9 android.hardware.gatekeeper
@@ -73,57 +89,37 @@ if [ -d /vendor/etc/vintf ]; then
     pkill -9 mitee_supplicant
     pkill -9 vndservicemanager
     log_msg "Restarted security services after VINTF patch."
+    
+    sleep 2
+
+    # 8. Background manual execution for extra diagnostics
+    export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
+    
+    KEYMINT_BIN="/vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee"
+    if [ -f "$KEYMINT_BIN" ]; then
+        $KEYMINT_BIN > /tmp/keymint_exec.log 2>&1 &
+    fi
+    
+    /system/bin/keystore2 /tmp/keystore > /tmp/keystore2_exec.log 2>&1 &
+    
+    # Try both common supplicant names
+    if [ -f /vendor/bin/tee-supplicant ]; then
+        /vendor/bin/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+    elif [ -f /vendor/bin/mitee_supplicant ]; then
+        /vendor/bin/mitee_supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+    fi
+
+    # 9. Explicitly start the security HALs via init triggers
+    log_msg "Explicitly starting security HALs via init..."
+    start tee-supplicant
+    start gatekeeper-1-0
+    start keymint-mitee
+    start keystore2
+    log_msg "Explicitly started security HALs."
+
 else
     log_msg "CRITICAL: /vendor/etc/vintf not found! Signaling ready anyway."
     setprop twrp.vintf.ready 1
-fi
-        export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
-        
-        # Correct path for KeyMint mitee
-        KEYMINT_BIN="/vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee"
-        if [ -f "$KEYMINT_BIN" ]; then
-            $KEYMINT_BIN > /tmp/keymint_exec.log 2>&1 &
-        else
-            log_msg "ERROR: KeyMint binary not found at $KEYMINT_BIN"
-        fi
-        
-        /system/bin/keystore2 /tmp/keystore > /tmp/keystore2_exec.log 2>&1 &
-        /vendor/bin/hw/android.hardware.gatekeeper@1.0-service > /tmp/gatekeeper_exec.log 2>&1 &
-        
-        # Try both common supplicant names
-        if [ -f /vendor/bin/tee-supplicant ]; then
-            /vendor/bin/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
-        elif [ -f /vendor/bin/mitee_supplicant ]; then
-            /vendor/bin/mitee_supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
-        fi
-        
-        sleep 2
-        
-        log_msg "--- KEYMINT EXEC LOG ---"
-        log_msg "$(cat /tmp/keymint_exec.log 2>/dev/null)"
-        log_msg "--- KEYSTORE2 EXEC LOG ---"
-        log_msg "$(cat /tmp/keystore2_exec.log 2>/dev/null)"
-        log_msg "--- TEE SUPPLICANT EXEC LOG ---"
-        log_msg "$(cat /tmp/tee_supplicant_exec.log 2>/dev/null)"
-        log_msg "------------------------"
-        
-        # Ensure SELinux is permissive before starting services
-        setenforce 0
-        
-        # Explicitly start the security HALs just in case the property trigger is missed
-        log_msg "Explicitly starting security HALs..."
-        start tee-supplicant
-        start gatekeeper-1-0
-        start keymint-mitee
-        start keystore2
-        log_msg "Explicitly started security HALs."
-
-    else
-        log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
-        setprop twrp.vintf.ready 1
-    fi
-else
-    log_msg "CRITICAL: /manifest_fixed.xml not found! Skipping VINTF patch."
 fi
 
 
@@ -148,32 +144,25 @@ df -h | grep -v "tmpfs"
 
 # --- 4. Service Manager Status ---
 log_msg ""
-log_msg "--- Service Managers (Binder/Hwbinder) ---"
+log_msg "--- Service Managers ---"
 ls -l /dev/binder /dev/vndbinder /dev/hwbinder
-ps -A | grep -E "servicemanager|hwservicemanager|vndservicemanager"
+ps -A | grep -iE "servicemanager|vndservicemanager"
 
 # --- 5. TEE & Security Service Status ---
 log_msg ""
 log_msg "--- TEE / Security HALs ---"
 ls -l /dev/tee* /dev/teepriv*
-# Try to list services via cmd if available, otherwise use service list
 service list | grep -iE "keystore|keymint|clock|secret|gatekeeper"
 
 # --- 6. HIDL Service Detailed Check (lshal) ---
 log_msg ""
 log_msg "--- HIDL Service Registration (lshal) ---"
-lshal --debug android.hardware.keymaster@4.0::IKeymasterDevice/default 2>/dev/null
 lshal | grep -E "keymaster|gatekeeper|health|boot|vibrator"
 
 # --- 7. Critical Logs ---
 log_msg ""
-log_msg "--- Last 50 Lines of Logcat (Errors) ---"
-log_cat_check=$(logcat -d -L 2>/dev/null | tail -n 50)
-if [ -n "$log_cat_check" ]; then
-    log_msg "$log_cat_check"
-fi
-log_msg "--- Logcat Error Highlights ---"
-log_msg "$(logcat -d *:E | tail -n 50)"
+log_msg "--- Logcat Error Highlights (Last 100) ---"
+logcat -d *:E | tail -n 100
 
 # --- 7b. Check Keystore Directory ---
 log_msg ""
@@ -184,21 +173,21 @@ ls -l /tmp/keystore
 # --- 8. Properties ---
 log_msg ""
 log_msg "--- Relevant Properties ---"
-log_msg "$(getprop | grep -E 'crypto|vold|init.svc|hwserv|mitee|vendor.sys.listener')"
+getprop | grep -E 'crypto|vold|init.svc|hwserv|mitee|vintf'
 
 log_msg ""
 log_msg "--- TWRP ENHANCED DEBUG BOOT END ---"
 
 # --- 9. PERSISTENCE LOOP ---
-# Init kills backgrounded services in a oneshot process group when the script exits.
-# We keep this script alive indefinitely to protect our HALs.
-log_msg "Entering persistence loop to prevent service termination..."
+log_msg "Entering persistence loop to protect background processes..."
 while true; do
-    # Periodic check to see if critical services are still alive
+    # Log heart-beat to kmsg so we know we're alive
+    echo "--- TWRP DEBUG PERSISTENCE LOOP ---" > /dev/kmsg
+    
+    # Check if keystore2 is running, restart if not
     if ! pgrep -f "keystore2" > /dev/null; then
-        log_msg "WARNING: keystore2 died, attempting restart..."
+        log_msg "RECOVERY: keystore2 missing, attempt restart"
         start keystore2
     fi
     sleep 60
 done
-
