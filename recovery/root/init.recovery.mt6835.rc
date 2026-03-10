@@ -113,20 +113,23 @@ service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-servi
     disabled
     seclabel u:r:recovery:s0
 
-service keystore2 /system/bin/keystore2 /tmp/keystore
-    class early_hal
-    user root
-    group root
-    interface aidl android.system.keystore2.IKeystoreService/default
-    disabled
-    seclabel u:r:recovery:s0
-
-
+# Security Services (Managed by debug_boot.sh)
 service gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
     interface android.hardware.gatekeeper@1.0::IGatekeeper default
     user root
     group root
-    setenv LD_LIBRARY_PATH /vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
+    disabled
+    seclabel u:r:recovery:s0
+
+service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee
+    user root
+    group root
+    disabled
+    seclabel u:r:recovery:s0
+
+service keystore2 /system/bin/keystore2 /tmp/keystore
+    user root
+    group root
     disabled
     seclabel u:r:recovery:s0
 
