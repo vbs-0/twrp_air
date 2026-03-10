@@ -19,6 +19,27 @@ log_msg "Forcing SELinux Permissive..."
 setenforce 0
 getenforce
 
+# 0.5 Universal Decryption: Dynamic Version Detection
+# This ensures that Android 14 devices stay on v14 (to prevent permanent key upgrades)
+# while Android 15 devices (HIOS 2) are correctly identified by TEE.
+log_msg "Detecting OS version for Universal Crypto..."
+if [ -f /vendor/build.prop ]; then
+    OS_VER=$(grep "ro.vendor.build.version.release=" /vendor/build.prop | head -n 1 | cut -d'=' -f2)
+    log_msg "Detected /vendor OS version: $OS_VER"
+    
+    if [ "$OS_VER" = "15" ]; then
+        log_msg "Android 15 detected! Overriding properties to fix Error -38..."
+        resetprop ro.build.version.release 15
+        resetprop ro.build.version.release_or_codename 15
+        resetprop ro.vendor.build.version.release 15
+        resetprop ro.system.build.version.release 15
+    else
+        log_msg "Android $OS_VER detected. Sticking with default (v14) to protect data."
+    fi
+else
+    log_msg "Warning: /vendor/build.prop not found. Using ramdisk defaults."
+fi
+
 # Ensure utilities are executable
 chmod 755 /system/bin/mtk_plpath_utils
 
