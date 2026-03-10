@@ -22,85 +22,61 @@ getenforce
 setprop twrp.vintf.ready 0
 log_msg "Reset twrp.vintf.ready to 0"
 
-# --- 1. VINTF dynamic patching ---
+# --- 1. VINTF dynamic patching (Complete Directory) ---
 log_msg "--- Checking for VINTF override ---"
 
-# The manifest_fixed.xml should be in the root of the ramdisk (/)
-# to avoid being hidden by the /vendor mount.
-if [ -f /manifest_fixed.xml ]; then
-    log_msg "Found /manifest_fixed.xml. Waiting for /vendor/etc/vintf to be ready..."
+# Wait for /vendor/etc/vintf directory to exist
+TIMER=0
+while [ ! -d /vendor/etc/vintf ] && [ $TIMER -lt 15 ]; do
+    sleep 1
+    TIMER=$((TIMER + 1))
+done
+
+if [ -d /vendor/etc/vintf ]; then
+    log_msg "Applying comprehensive VINTF overrides..."
     
-    # Wait for /vendor/etc/vintf directory to exist
-    TIMER=0
-    while [ ! -d /vendor/etc/vintf ] && [ $TIMER -lt 15 ]; do
-        sleep 1
-        TIMER=$((TIMER + 1))
-    done
+    # 1. Create a writable copy of the VINTF directory in /tmp
+    mkdir -p /tmp/vintf
+    cp -rf /vendor/etc/vintf/* /tmp/vintf/
     
-    if [ -d /vendor/etc/vintf ]; then
-        log_msg "Applying VINTF overrides surgically..."
-        
-        # 1. Overlay /vendor/etc/vintf using tmpfs to avoid breaking /odm symlinks
-        # Check if /odm is a symlink to /vendor/odm
-        if [ -L /odm ]; then
-            log_msg "/odm is a symlink: $(ls -ld /odm)"
-        fi
+    # 2. Use sed to patch version 5.0 -> 4.0 in ALL files in our copy
+    # This catches the main manifest and any fragments (e.g. manifest_c3vinl.xml)
+    find /tmp/vintf -type f -name "*.xml" -exec sed -i 's/version="5.0"/version="4.0"/g' {} +
+    
+    # 3. Bind-mount our patched directory over the original
+    mount -o bind /tmp/vintf /vendor/etc/vintf
+    log_msg "Bind-mount /tmp/vintf over /vendor/etc/vintf status: $?"
 
-        # Use a more targeted approach. If we can't mount tmpfs safely, we just try to bind-mount the files.
-        # But tmpfs is usually better if it doesn't break underlying links.
-        # To be safe, we only patch the EXACT files we need.
-        
-        # Patch /vendor/etc/vintf/manifest.xml
-        if [ -f /vendor/etc/vintf/manifest.xml ]; then
-            mount -o bind /manifest_fixed.xml /vendor/etc/vintf/manifest.xml
-            log_msg "Bind-mount /vendor/etc/vintf/manifest.xml status: $?"
-        fi
+    # Also patch /vendor/manifest.xml if it exists at root
+    if [ -f /vendor/manifest.xml ]; then
+        sed 's/version="5.0"/version="4.0"/g' /vendor/manifest.xml > /tmp/vendor_manifest.xml
+        mount -o bind /tmp/vendor_manifest.xml /vendor/manifest.xml
+        log_msg "Bind-mount /tmp/vendor_manifest.xml status: $?"
+    fi
 
-        # Patch /vendor/manifest.xml
-        if [ -f /vendor/manifest.xml ]; then
-            mount -o bind /manifest_fixed.xml /vendor/manifest.xml
-            log_msg "Bind-mount /vendor/manifest.xml status: $?"
-        fi
+    # 4. Create writable Keystore2 directory
+    log_msg "Setting up /tmp/keystore..."
+    mkdir -p /tmp/keystore
+    chown 1000:1000 /tmp/keystore
+    chmod 0700 /tmp/keystore
 
-        # 2. Patch /odm/etc/vintf/manifest_c3vinl.xml to prevent the "Too many symbolic links" error
-        # If the error is "Too many symbolic links", it means the system is chasing a loop.
-        # We can try to bind-mount our manifest over the problematic ODM manifest too.
-        if [ -f /odm/etc/vintf/manifest_c3vinl.xml ]; then
-            mount -o bind /manifest_fixed.xml /odm/etc/vintf/manifest_c3vinl.xml
-            log_msg "Bind-mount /odm/etc/vintf/manifest_c3vinl.xml status: $?"
-        fi
+    # 5. Signal that VINTF is patched
+    setprop twrp.vintf.ready 1
+    log_msg "Property twrp.vintf.ready set to 1."
 
-        # 3. Create writable Keystore2 directory
-        log_msg "Setting up /tmp/keystore..."
-        mkdir -p /tmp/keystore
-        chown 1000:1000 /tmp/keystore
-        chmod 0700 /tmp/keystore
-
-        # Removed manual stop/start of security HALs.
-        # Starting and killing these services causes kernel panics if they are hung in D-state.
-        # We will let init map and start them natively.
-
-        # 6. Signal that VINTF is patched and ready for fresh service startup
-        setprop twrp.vintf.ready 1
-        log_msg "Property twrp.vintf.ready set to 1."
-
-        # Re-kill keystore2 and security HALs to force them to reload the newly bind-mounted manifest
-        pkill -9 keystore2
-        pkill -9 android.hardware.security.keymint
-        pkill -9 android.hardware.gatekeeper
-        pkill -9 tee-supplicant
-        pkill -9 vndservicemanager
-        log_msg "Restarted security services after VINTF patch."
-        
-        # --- PHASE 15 DIAGNOSTICS ---
-        log_msg "--- DIRECTORY LISTING /vendor/bin/hw ---"
-        log_msg "$(ls -F /vendor/bin/hw/)"
-        log_msg "--- SEARCHING FOR TEE NODES ---"
-        log_msg "$(ls -l /dev/tee* /dev/mitee* /dev/teepriv* 2>/dev/null)"
-        
-        # Manually execute the binaries to capture any missing library errors to /tmp
-        log_msg "Capturing binary execution errors..."
-        # Use the same LD_LIBRARY_PATH as the service
+    # 6. Kill services to force reload
+    # We do this BEFORE manual starts to ensure init doesn't have stale handles
+    pkill -9 keystore2
+    pkill -9 android.hardware.security.keymint
+    pkill -9 android.hardware.gatekeeper
+    pkill -9 tee-supplicant
+    pkill -9 mitee_supplicant
+    pkill -9 vndservicemanager
+    log_msg "Restarted security services after VINTF patch."
+else
+    log_msg "CRITICAL: /vendor/etc/vintf not found! Signaling ready anyway."
+    setprop twrp.vintf.ready 1
+fi
         export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
         
         # Correct path for KeyMint mitee
@@ -135,6 +111,7 @@ if [ -f /manifest_fixed.xml ]; then
         setenforce 0
         
         # Explicitly start the security HALs just in case the property trigger is missed
+        log_msg "Explicitly starting security HALs..."
         start tee-supplicant
         start gatekeeper-1-0
         start keymint-mitee
@@ -211,4 +188,17 @@ log_msg "$(getprop | grep -E 'crypto|vold|init.svc|hwserv|mitee|vendor.sys.liste
 
 log_msg ""
 log_msg "--- TWRP ENHANCED DEBUG BOOT END ---"
+
+# --- 9. PERSISTENCE LOOP ---
+# Init kills backgrounded services in a oneshot process group when the script exits.
+# We keep this script alive indefinitely to protect our HALs.
+log_msg "Entering persistence loop to prevent service termination..."
+while true; do
+    # Periodic check to see if critical services are still alive
+    if ! pgrep -f "keystore2" > /dev/null; then
+        log_msg "WARNING: keystore2 died, attempting restart..."
+        start keystore2
+    fi
+    sleep 60
+done
 
