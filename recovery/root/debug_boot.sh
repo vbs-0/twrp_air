@@ -85,10 +85,18 @@ if [ -f /manifest_fixed.xml ]; then
         log_msg "Property twrp.vintf.ready set to 1."
         
         # --- PHASE 13 DIAGNOSTICS ---
+        log_msg "--- DIRECTORY LISTING /vendor/bin/hw ---"
+        log_msg "$(ls -F /vendor/bin/hw/)"
+        log_msg "--- SEARCHING FOR KEYMASTER LIBS IN /vendor/lib64 ---"
+        log_msg "$(ls /vendor/lib64/libkeymaster* /vendor/lib64/libtee* 2>/dev/null)"
+        
         # Manually execute the binaries to capture any missing library errors to /tmp
         log_msg "Capturing binary execution errors..."
+        # Use the same LD_LIBRARY_PATH as the service
+        export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
+        
         /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee > /tmp/keymint_exec.log 2>&1 &
-        /system/bin/keystore2 > /tmp/keystore2_exec.log 2>&1 &
+        /system/bin/keystore2 /tmp/keystore > /tmp/keystore2_exec.log 2>&1 &
         /vendor/bin/hw/android.hardware.gatekeeper@1.0-service > /tmp/gatekeeper_exec.log 2>&1 &
         /vendor/bin/hw/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
         
@@ -98,8 +106,6 @@ if [ -f /manifest_fixed.xml ]; then
         log_msg "$(cat /tmp/keymint_exec.log 2>/dev/null)"
         log_msg "--- KEYSTORE2 EXEC LOG ---"
         log_msg "$(cat /tmp/keystore2_exec.log 2>/dev/null)"
-        log_msg "--- GATEKEEPER EXEC LOG ---"
-        log_msg "$(cat /tmp/gatekeeper_exec.log 2>/dev/null)"
         log_msg "--- TEE SUPPLICANT EXEC LOG ---"
         log_msg "$(cat /tmp/tee_supplicant_exec.log 2>/dev/null)"
         log_msg "------------------------"
