@@ -89,23 +89,37 @@ if [ -f /manifest_fixed.xml ]; then
         pkill -9 android.hardware.security.keymint
         pkill -9 android.hardware.gatekeeper
         pkill -9 tee-supplicant
+        pkill -9 vndservicemanager
         log_msg "Restarted security services after VINTF patch."
         
-        # --- PHASE 13 DIAGNOSTICS ---
+        # --- PHASE 15 DIAGNOSTICS ---
         log_msg "--- DIRECTORY LISTING /vendor/bin/hw ---"
         log_msg "$(ls -F /vendor/bin/hw/)"
-        log_msg "--- SEARCHING FOR KEYMASTER LIBS IN /vendor/lib64 ---"
-        log_msg "$(ls /vendor/lib64/libkeymaster* /vendor/lib64/libtee* 2>/dev/null)"
+        log_msg "--- SEARCHING FOR TEE NODES ---"
+        log_msg "$(ls -l /dev/tee* /dev/mitee* /dev/teepriv* 2>/dev/null)"
         
         # Manually execute the binaries to capture any missing library errors to /tmp
         log_msg "Capturing binary execution errors..."
         # Use the same LD_LIBRARY_PATH as the service
         export LD_LIBRARY_PATH=/vendor/lib64:/vendor/lib:/system/lib64:/system/lib:/sbin
         
-        /vendor/bin/hw/android.hardware.security.keymint-service.mitee > /tmp/keymint_exec.log 2>&1 &
+        # Correct path for KeyMint mitee
+        KEYMINT_BIN="/vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee"
+        if [ -f "$KEYMINT_BIN" ]; then
+            $KEYMINT_BIN > /tmp/keymint_exec.log 2>&1 &
+        else
+            log_msg "ERROR: KeyMint binary not found at $KEYMINT_BIN"
+        fi
+        
         /system/bin/keystore2 /tmp/keystore > /tmp/keystore2_exec.log 2>&1 &
         /vendor/bin/hw/android.hardware.gatekeeper@1.0-service > /tmp/gatekeeper_exec.log 2>&1 &
-        /vendor/bin/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+        
+        # Try both common supplicant names
+        if [ -f /vendor/bin/tee-supplicant ]; then
+            /vendor/bin/tee-supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+        elif [ -f /vendor/bin/mitee_supplicant ]; then
+            /vendor/bin/mitee_supplicant > /tmp/tee_supplicant_exec.log 2>&1 &
+        fi
         
         sleep 2
         
@@ -117,12 +131,16 @@ if [ -f /manifest_fixed.xml ]; then
         log_msg "$(cat /tmp/tee_supplicant_exec.log 2>/dev/null)"
         log_msg "------------------------"
         
+        # Ensure SELinux is permissive before starting services
+        setenforce 0
+        
         # Explicitly start the security HALs just in case the property trigger is missed
         start tee-supplicant
         start gatekeeper-1-0
         start keymint-mitee
         start keystore2
         log_msg "Explicitly started security HALs."
+
     else
         log_msg "CRITICAL: /vendor/etc/vintf not found after 15s. Signaling ready anyway."
         setprop twrp.vintf.ready 1
