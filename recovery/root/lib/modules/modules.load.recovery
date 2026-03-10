@@ -180,9 +180,15 @@ mtk-mminfra-imax.ko
 mtk-socinfo.ko
 emi.ko
 emi-mpu.ko
-mtk_rpmsg_mbox.ko
 mtk-mbox.ko
 mtk_tinysys_ipi.ko
+mtk_rpmsg_mbox.ko
+mtk-afe-external.ko
+scp.ko
+lct_tp.ko
+hf_manager.ko
+xiaomi_tp.ko
+nt36528_spi.ko
 bus-parity.ko
 clk-disable-unused.ko
 mtk-pm-domain-disable-unused.ko
