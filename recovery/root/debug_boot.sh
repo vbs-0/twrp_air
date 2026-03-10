@@ -1,6 +1,6 @@
 #!/system/bin/sh
 set -x
-# TWRP Debug Boot Script - Phase 18 Robust Version
+# TWRP Debug Boot Script - Phase 19 High-Stability Version
 LOGFILE="/tmp/debug_boot.log"
 
 # Function to log to both file and kmsg
@@ -11,7 +11,7 @@ log_msg() {
 
 exec > $LOGFILE 2>&1
 
-log_msg "--- TWRP PHASE 18 DEBUG BOOT START ---"
+log_msg "--- TWRP PHASE 19 DEBUG BOOT START ---"
 date
 id
 
@@ -23,29 +23,36 @@ getenforce
 # 1. Fix Block Device Paths (Critical for mtk_plpath_utils)
 log_msg "Fixing block device paths..."
 mkdir -p /dev/block/platform/bootdevice/by-name/
+# Ensure the parent directory is reachable and labeled
+chcon u:object_r:block_device:s0 /dev/block/platform/bootdevice/by-name/
+
 # Link existing nodes if they are missing from the bootdevice path
 for part in preloader_raw_a preloader_raw_b; do
     if [ ! -L /dev/block/platform/bootdevice/by-name/$part ]; then
+        log_msg "Creating symlink for $part..."
         ln -s /dev/block/by-name/$part /dev/block/platform/bootdevice/by-name/$part 2>/dev/null
+        chcon -h u:object_r:preloader_block_device:s0 /dev/block/platform/bootdevice/by-name/$part 2>/dev/null
     fi
 done
 
 # 2. Wait and Relabel TEE Nodes (Robust Loop)
 log_msg "Waiting for TEE device nodes..."
 TIMER=0
-while [ ! -c /dev/teepriv0 ] && [ $TIMER -lt 10 ]; do
+while [ ! -c /dev/teepriv0 ] && [ $TIMER -lt 15 ]; do
+    log_msg "Still waiting for /dev/teepriv0 ($TIMER)..."
     sleep 1
     TIMER=$((TIMER + 1))
 done
 
 if [ -c /dev/teepriv0 ]; then
-    log_msg "Found /dev/teepriv0, applying labels..."
-    chcon u:object_r:tee_device:s0 /dev/teepriv0 /dev/tee0 2>/dev/null
-    chmod 666 /dev/teepriv0 /dev/tee0 2>/dev/null
+    log_msg "Found /dev/teepriv0, applying working system label (mitee_client_device)..."
+    # IMPORTANT: The normal system uses mitee_client_device, not tee_device
+    chcon u:object_r:mitee_client_device:s0 /dev/teepriv0 /dev/tee0 2>/dev/null
+    chmod 0666 /dev/teepriv0 /dev/tee0 2>/dev/null
     chown system:system /dev/teepriv0 /dev/tee0 2>/dev/null
     ls -lZ /dev/teepriv0 /dev/tee0
 else
-    log_msg "WARNING: TEE nodes not found after 10s"
+    log_msg "WARNING: TEE nodes not found after 15s"
 fi
 
 # 3. VINTF dynamic patching
@@ -68,7 +75,7 @@ if [ -d /vendor/etc/vintf ]; then
     # 4. Keystore2 Setup
     log_msg "Setting up /tmp/keystore..."
     mkdir -p /tmp/keystore
-    chown root:root /tmp/keystore
+    chown system:system /tmp/keystore
     chmod 0775 /tmp/keystore
 
     # 5. Fix Entrypoints and Binary Contexts

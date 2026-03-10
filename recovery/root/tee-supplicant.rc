@@ -34,5 +34,5 @@ on fs
     setprop vendor.teefs_state ready
     setprop ro.hardware.gatekeeper mitee
     
-    # Start tee-supplicant immediately so it handles any early TEE ioctls without hanging
-    start tee-supplicant
+    # Start tee-supplicant managed by debug_boot.sh after node relabeling
+    # start tee-supplicant
