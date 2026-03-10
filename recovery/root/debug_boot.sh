@@ -1,6 +1,6 @@
 #!/system/bin/sh
 set -x
-# TWRP Debug Boot Script - Phase 22
+# TWRP Debug Boot Script - Phase 23
 LOGFILE="/tmp/debug_boot.log"
 
 log_msg() {
@@ -10,7 +10,7 @@ log_msg() {
 
 exec > $LOGFILE 2>&1
 
-log_msg "--- TWRP PHASE 22 DEBUG BOOT START ---"
+log_msg "--- TWRP PHASE 23 DEBUG BOOT START ---"
 date
 id
 
@@ -80,7 +80,7 @@ while [ $WAIT -lt 30 ]; do
     WAIT=$((WAIT + 1))
 done
 
-# Start keystore2 - it will initially look at ramdisk /data/misc/keystore
+# Start keystore2 - it will use /tmp/misc/keystore (standard TWRP staging)
 log_msg "Starting keystore2..."
 start keystore2
 
@@ -90,7 +90,7 @@ start keystore2
 log_msg "--- DIAGNOSTICS ---"
 getprop | grep -E 'init.svc.(tee|keystore|keymint|gatekeeper)|twrp|vintf|vold'
 
-log_msg "--- TWRP PHASE 22 DEBUG BOOT SYNC END (Loop continuing in background) ---"
+log_msg "--- TWRP PHASE 23 DEBUG BOOT SYNC END (Loop continuing in background) ---"
 
 # 8. Persistence loop — Use getprop instead of pgrep (unreliable due to SELinux)
 while true; do
