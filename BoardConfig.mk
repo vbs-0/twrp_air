@@ -170,6 +170,7 @@ TARGET_USES_MKE2FS := true
 TW_NO_SCREEN_BLANK := true
 TW_INCLUDE_SCREENSHOT := true
 TW_INCLUDE_FB2PNG := true
+TW_SCREENSHOT_PATH := /sdcard/Pictures/Screenshots
 
 # UI
 TW_THEME := portrait_hdpi
