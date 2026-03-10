@@ -153,7 +153,7 @@ TW_BRIGHTNESS_PATH := "/sys/class/leds/lcd-backlight/brightness"
 TW_MAX_BRIGHTNESS := 2047
 TW_DEFAULT_BRIGHTNESS := 900
 TW_INPUT_BLACKLIST := "hbtp_vm"
-TW_CUSTOM_CPU_TEMP_PATH := "/sys/class/thermal/thermal_zone4/temp"
+TW_CUSTOM_CPU_TEMP_PATH := "/sys/class/thermal/thermal_zone0/temp"
 TW_EXCLUDE_APEX := true
 
 TW_BACKUP_EXCLUSIONS := /data/fonts/files
@@ -168,11 +168,14 @@ TARGET_USES_MKE2FS := true
 
 # Display
 TW_NO_SCREEN_BLANK := true
+TW_INCLUDE_SCREENSHOT := true
+TW_INCLUDE_FB2PNG := true
 
 # UI
 TW_THEME := portrait_hdpi
 TW_FRAMERATE := 60
 TW_STATUS_ICONS_ALIGN := center
+TW_TIME_ZONE := "IST-5:30"
 TW_CUSTOM_CPU_POS := 50
 TW_CUSTOM_CLOCK_POS := 300
 TW_CUSTOM_BATTERY_POS := 800
@@ -194,4 +197,4 @@ TW_SUPPORT_INPUT_AIDL_HAPTICS := true
 # Use legacy code for battery readout
 TW_USE_LEGACY_BATTERY_SERVICES := true
 TW_LOAD_VENDOR_BOOT_MODULES := true
-TW_DEVICE_VERSION := vbs-7x
+TW_DEVICE_VERSION := "@vbs_1 & @dream_7x"
