@@ -1,6 +1,6 @@
 #!/system/bin/sh
 set -x
-# TWRP Debug Boot Script - Phase 19 High-Stability Version
+# TWRP Debug Boot Script - Phase 20 High-Stability Version
 LOGFILE="/tmp/debug_boot.log"
 
 # Function to log to both file and kmsg
@@ -11,7 +11,7 @@ log_msg() {
 
 exec > $LOGFILE 2>&1
 
-log_msg "--- TWRP PHASE 19 DEBUG BOOT START ---"
+log_msg "--- TWRP PHASE 20 DEBUG BOOT START ---"
 date
 id
 
@@ -19,6 +19,9 @@ id
 log_msg "Forcing SELinux Permissive..."
 setenforce 0
 getenforce
+
+# Ensure mtk_plpath_utils is executable
+chmod 755 /system/bin/mtk_plpath_utils
 
 # 1. Fix Block Device Paths (Critical for mtk_plpath_utils)
 log_msg "Fixing block device paths..."
@@ -62,12 +65,19 @@ if [ -d /vendor/etc/vintf ]; then
     mkdir -p /tmp/vintf
     cp -rf /vendor/etc/vintf/* /tmp/vintf/
     find /tmp/vintf -type f -name "*.xml" -exec sed -i 's/version="5.0"/version="4.0"/g' {} +
+    
+    # PHASE 20 FIX: Ensure system user can read these files
+    chmod -R 755 /tmp/vintf
+    chown -R system:system /tmp/vintf
+    
     mount -o bind /tmp/vintf /vendor/etc/vintf
     log_msg "Bind-mount /tmp/vintf over /vendor/etc/vintf status: $?"
 
     # Also patch /vendor/manifest.xml if it exists at root
     if [ -f /vendor/manifest.xml ]; then
         sed 's/version="5.0"/version="4.0"/g' /vendor/manifest.xml > /tmp/vendor_manifest.xml
+        chmod 644 /tmp/vendor_manifest.xml
+        chown system:system /tmp/vendor_manifest.xml
         mount -o bind /tmp/vendor_manifest.xml /vendor/manifest.xml
         log_msg "Bind-mount /tmp/vendor_manifest.xml status: $?"
     fi
@@ -75,7 +85,8 @@ if [ -d /vendor/etc/vintf ]; then
     # 4. Keystore2 Setup
     log_msg "Setting up /tmp/keystore..."
     mkdir -p /tmp/keystore
-    chown system:system /tmp/keystore
+    # PHASE 20 FIX: Keystore2 MUST own its directory
+    chown -R system:system /tmp/keystore
     chmod 0775 /tmp/keystore
 
     # 5. Fix Entrypoints and Binary Contexts
@@ -93,16 +104,17 @@ if [ -d /vendor/etc/vintf ]; then
     stop keystore2
     stop keymint-mitee
     stop gatekeeper-1-0
-    stop tee-supplicant
+    # Don't stop tee-supplicant if it's already working, to avoid "device busy"
+    if ! pgrep -f "tee-supplicant" > /dev/null; then
+        start tee-supplicant
+    fi
     
     # Kill any stray processes
     pkill -9 keystore2
-    pkill -9 tee-supplicant
     
     sleep 1
     
     # Start via init triggers (matches dependency logic in rc)
-    start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
     start keystore2
@@ -118,7 +130,7 @@ service list | grep -iE "keystore|keymint|clock|secret|gatekeeper"
 ls -l /dev/tee* /dev/teepriv*
 getprop | grep -E 'crypto|vold|init.svc|hwserv|mitee|vintf'
 
-log_msg "--- TWRP PHASE 18 DEBUG BOOT END ---"
+log_msg "--- TWRP PHASE 20 DEBUG BOOT END ---"
 
 # --- 8. PERSISTENCE LOOP ---
 while true; do

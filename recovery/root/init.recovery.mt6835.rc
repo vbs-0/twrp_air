@@ -13,6 +13,9 @@ on init
     setprop sys.usb.configfs 1
     setprop sys.usb.ffs.aio_compat 1
     setprop crypto.ready 1
+    
+    # Start debug_boot IMMEDIATELY to force permissive and setup paths early
+    start debug_boot
 
 # For vibrator
     write /sys/class/leds/vibrator/trigger "transient"
@@ -35,10 +38,8 @@ on post-fs
     mkdir /tmp/keystore 0775 root root
     chown root root /tmp/keystore
     
-    # Run debug_boot early to apply VINTF override before HALs start
-    # Start debug_boot script early to manage VINTF and SELinux
-    start debug_boot
-
+    # debug_boot now started in 'on init'
+    
     # Restart managers to pick up new manifest (handled by debug_boot.sh too, but safe here)
     # restart servicemanager
     # restart hwservicemanager
