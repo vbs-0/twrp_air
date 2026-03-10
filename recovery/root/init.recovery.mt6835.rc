@@ -17,6 +17,10 @@ on init
     # Start debug_boot IMMEDIATELY to force permissive and setup paths early
     start debug_boot
 
+    # Load thermal modules for CPU temperature display
+    insmod /lib/modules/thermal_interface.ko
+    insmod /lib/modules/soc_temp_lvts.ko
+
 # For vibrator
     write /sys/class/leds/vibrator/trigger "transient"
     chown system system /sys/class/leds/vibrator/trigger

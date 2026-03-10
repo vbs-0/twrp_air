@@ -23,6 +23,15 @@ getenforce
 # This ensures that Android 14 devices stay on v14 (to prevent permanent key upgrades)
 # while Android 15 devices (HIOS 2) are correctly identified by TEE.
 log_msg "Detecting OS version for Universal Crypto..."
+
+# Wait up to 10 seconds for /vendor/build.prop (Vendor partition mount)
+V_WAIT=0
+while [ ! -f /vendor/build.prop ] && [ $V_WAIT -lt 10 ]; do
+    log_msg "Waiting for /vendor/build.prop... (${V_WAIT}s)"
+    sleep 1
+    V_WAIT=$((V_WAIT + 1))
+done
+
 if [ -f /vendor/build.prop ]; then
     OS_VER=$(grep "ro.vendor.build.version.release=" /vendor/build.prop | head -n 1 | cut -d'=' -f2)
     log_msg "Detected /vendor OS version: $OS_VER"
@@ -37,7 +46,7 @@ if [ -f /vendor/build.prop ]; then
         log_msg "Android $OS_VER detected. Sticking with default (v14) to protect data."
     fi
 else
-    log_msg "Warning: /vendor/build.prop not found. Using ramdisk defaults."
+    log_msg "Warning: /vendor/build.prop not found after wait. Using ramdisk defaults."
 fi
 
 # Ensure utilities are executable
