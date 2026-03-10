@@ -84,30 +84,7 @@ done
 log_msg "Starting keystore2..."
 start keystore2
 
-# 6. HANDLE DATA MOUNT RACE CONDITION
-# We need to restart Keystore2 AFTER TWRP decrypts metadata and mounts /dev/block/dm-11 to /data.
-# Otherwise, Keystore2 keeps looking at the hidden ramdisk directory.
-log_msg "Watching for /data mount (dm-11) to restart keystore2..."
-(
-    DATA_RESTARTED=0
-    while [ $DATA_RESTARTED -eq 0 ]; do
-        if mount | grep -q "/dev/block/dm-11 on /data"; then
-            log_msg "DETECTED /data mount on dm-11! Restarting keystore2 for FBE decryption..."
-            stop keystore2
-            sleep 2
-            # Set permissions on real partition just in case
-            chown -R keystore:keystore /data/misc/keystore 2>/dev/null
-            chmod 0700 /data/misc/keystore 2>/dev/null
-            start keystore2
-            DATA_RESTARTED=1
-            log_msg "Keystore2 restarted on real /data"
-        fi
-        sleep 2
-        # Timeout after 2 minutes if decryption doesn't even start
-        TIMER_DATA=$((TIMER_DATA + 2))
-        if [ $TIMER_DATA -gt 120 ]; then break; fi
-    done
-) &
+
 
 # 7. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
@@ -129,14 +106,6 @@ while true; do
     if [ "$STATUS" != "running" ]; then
         log_msg "RECOVERY: gatekeeper-1-0 status is $STATUS, restarting..."
         start gatekeeper-1-0
-    fi
-
-    # Check keystore2 (only if keymint is running)
-    STATUS=$(getprop init.svc.keystore2)
-    K_STATUS=$(getprop init.svc.keymint-mitee)
-    if [ "$STATUS" != "running" ] && [ "$K_STATUS" == "running" ]; then
-        log_msg "RECOVERY: keystore2 status is $STATUS, restarting..."
-        start keystore2
     fi
 
     setenforce 0 2>/dev/null

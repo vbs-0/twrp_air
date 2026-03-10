@@ -124,7 +124,7 @@ service gatekeeper-1-0 /vendor/bin/hw/android.hardware.gatekeeper@1.0-service
 
 # Removed redundant keymint-mitee definition
 
-service keystore2 /system/bin/keystore2 /data/misc/keystore
+service keystore2 /system/bin/keystore2 /tmp/misc/keystore
     class early_hal
     user system
     group system keystore readproc log
