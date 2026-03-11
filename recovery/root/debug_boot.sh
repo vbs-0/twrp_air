@@ -19,6 +19,47 @@ log_msg "Forcing SELinux Permissive..."
 setenforce 0
 getenforce
 
+insmod_safe() {
+    local mod="$1"
+    local name=$(basename $mod .ko)
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name already loaded"
+        return 0
+    fi
+    if [ ! -f "$mod" ]; then
+        log_msg "Touch: ERROR - $mod not found!"
+        return 1
+    fi
+    insmod "$mod" 2>&1
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name loaded"
+        return 0
+    else
+        log_msg "Touch: ERROR loading $name"
+        return 1
+    fi
+}
+
+log_msg "--- Loading 10-module touch & thermal stack ---"
+# Foundational Stack
+insmod_safe /lib/modules/mtk-mbox.ko
+insmod_safe /lib/modules/mtk_tinysys_ipi.ko
+insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
+insmod_safe /lib/modules/mtk-afe-external.ko
+insmod_safe /lib/modules/scp.ko
+
+# Thermal for stability
+insmod_safe /lib/modules/thermal_interface.ko
+insmod_safe /lib/modules/soc_temp_lvts.ko
+
+# Touch Layer
+insmod_safe /lib/modules/lct_tp.ko
+insmod_safe /lib/modules/hf_manager.ko
+insmod_safe /lib/modules/xiaomi_tp.ko
+insmod_safe /lib/modules/nt36528_spi.ko
+
+log_msg "Touch stack loading sequence finished."
+
 # 0.5 Universal Decryption: Dynamic Version Detection
 # This ensures that Android 14 devices stay on v14 (to prevent permanent key upgrades)
 # while Android 15 devices (HIOS 2) are correctly identified by TEE.
@@ -116,79 +157,11 @@ start keystore2
 
 
 
-# 6. Load touch modules (Delayed 9-module stack for stability)
-# Dependency chain: mtk-mbox -> ipi -> rpmsg -> afe -> scp -> touch_providers -> nt36528
-log_msg "Waiting 20 seconds for hardware stability before loading touch..."
-sleep 20
-
-log_msg "--- Loading 9-module touch stack ---"
-setenforce 0
-
-insmod_safe() {
-    local mod="$1"
-    local name=$(basename $mod .ko)
-    if lsmod | grep -q "^${name} "; then
-        log_msg "Touch: $name already loaded"
-        return 0
-    fi
-    if [ ! -f "$mod" ]; then
-        log_msg "Touch: ERROR - $mod not found!"
-        return 1
-    fi
-    insmod "$mod" 2>&1
-    if lsmod | grep -q "^${name} "; then
-        log_msg "Touch: $name loaded"
-        return 0
-    else
-        log_msg "Touch: ERROR loading $name"
-        return 1
-    fi
-}
-
-# Core Mailbox & IPI
-insmod_safe /lib/modules/mtk-mbox.ko
-insmod_safe /lib/modules/mtk_tinysys_ipi.ko
-insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
-
-# Audio Prerequisite for SCP
-insmod_safe /lib/modules/mtk-afe-external.ko
-
-# Sensor Core Processor (Critical hardware link)
-insmod_safe /lib/modules/scp.ko
-
-# Touch Providers
-insmod_safe /lib/modules/lct_tp.ko
-insmod_safe /lib/modules/hf_manager.ko
-insmod_safe /lib/modules/xiaomi_tp.ko
-
-# Core Touch Driver
-insmod_safe /lib/modules/nt36528_spi.ko
-
-log_msg "Touch stack loading sequence finished."
-log_msg "Active Modules: $(lsmod | grep -E 'nt36|lct_tp|xiaomi_tp|hf_manager|scp|afe|ipi|mbox' | awk '{print $1}' | tr '\n' ' ')"
-
-# 7. Diagnostics
+# 6. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
 getprop | grep -E 'init.svc.(tee|keystore|keymint|gatekeeper)|twrp|vintf|vold'
 
-log_msg "--- TWRP PHASE 23 DEBUG BOOT SYNC END (Loop continuing in background) ---"
-
-# 8. Persistence loop — Use getprop instead of pgrep (unreliable due to SELinux)
-while true; do
-    # Check keymint
-    STATUS=$(getprop init.svc.keymint-mitee)
-    if [ "$STATUS" != "running" ]; then
-        log_msg "RECOVERY: keymint-mitee status is $STATUS, restarting..."
-        start keymint-mitee
-    fi
-    
-    # Check gatekeeper
-    STATUS=$(getprop init.svc.gatekeeper-1-0)
-    if [ "$STATUS" != "running" ]; then
-        log_msg "RECOVERY: gatekeeper-1-0 status is $STATUS, restarting..."
-        start gatekeeper-1-0
-    fi
-
-    setenforce 0 2>/dev/null
-    sleep 30
-done
+log_msg "--- TWRP DEBUG BOOT SYNC END ---"
+exit 0
+# Persistence loop disabled to prevent instability
+# (Service monitoring should be handled by init.recovery.rc triggers)
