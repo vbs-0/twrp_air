@@ -182,6 +182,8 @@ emi-mpu.ko
 mtk_rpmsg_mbox.ko
 mtk-mbox.ko
 mtk_tinysys_ipi.ko
+scp.ko
+mtk-afe-external.ko
 bus-parity.ko
 clk-disable-unused.ko
 mtk-pm-domain-disable-unused.ko
@@ -189,3 +191,6 @@ arm_dsu_pmu.ko
 uload_ind.ko
 load_track.ko
 sec.ko
+xiaomi_tp.ko
+lct_tp.ko
+nt36528_spi.ko
