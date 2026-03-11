@@ -85,15 +85,12 @@ fi
 sleep 1
 
 log_msg "--- Loading essential touch stack ---"
-# Load SCP (Sensor Core Processor) and Audio Front End (Dependencies)
-insmod_safe /lib/modules/scp.ko
-insmod_safe /lib/modules/mtk-afe-external.ko
-
-# Touch Layer
-insmod_safe /lib/modules/lct_tp.ko
-insmod_safe /lib/modules/hf_manager.ko
-insmod_safe /lib/modules/xiaomi_tp.ko
+# Modprobe will automatically follow the chain in modules.dep:
+# hf_manager -> lct_tp
+# nt36528_spi -> xiaomi_tp, lct_tp, scp, mtk-afe-external, mtk_tinysys_ipi, etc.
+modprobe_safe hf_manager
 modprobe_safe nt36528_spi
+modprobe_safe xiaomi_tp
 
 log_msg "Touch stack loading sequence finished."
 

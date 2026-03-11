@@ -195,3 +195,9 @@
 /lib/modules/mac80211.ko: /lib/modules/cfg80211.ko
 /lib/modules/mtk-mmdvfs-ftrace.ko:
 /lib/modules/mtk_mdpm.ko:
+/lib/modules/mtk-afe-external.ko:
+/lib/modules/scp.ko: /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
+/lib/modules/xiaomi_tp.ko:
+/lib/modules/lct_tp.ko:
+/lib/modules/hf_manager.ko: /lib/modules/lct_tp.ko
+/lib/modules/nt36528_spi.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
