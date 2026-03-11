@@ -1,4 +1,3 @@
-mtk-mbox.ko
 mtk_rpmsg_mbox.ko
 mtk_tinysys_ipi.ko
 mtk-afe-external.ko

@@ -20,9 +20,6 @@ on init
     # insmod /lib/modules/thermal_interface.ko
     # insmod /lib/modules/soc_temp_lvts.ko
 
-    # Load Touch and Display modules via isolated service to prevent race condition
-    start load-touch-modules
-
 # For vibrator
     write /sys/class/leds/vibrator/trigger "transient"
     chown system system /sys/class/leds/vibrator/trigger
@@ -90,6 +87,9 @@ on boot
     chmod 0664 /dev/xiaomi-touch
     chown system system /sys/class/touch/tp_dev/fod_status
     chmod 0664 /sys/class/touch/tp_dev/fod_status
+
+    # Load Touch modules via isolated service after core modules are stable
+    start load-touch-modules
 
 service touchfeature-hal-1-0 /vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service
     class main
