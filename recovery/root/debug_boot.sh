@@ -40,45 +40,42 @@ log_msg "Forcing SELinux Permissive..."
 setenforce 0
 getenforce
 
-# 0.5 Universal Decryption: Dynamic Version Detection
-# This ensures that Android 14 devices stay on v14 (to prevent permanent key upgrades)
-# while Android 15 devices (HIOS 2) are correctly identified by TEE.
-log_msg "Detecting OS version for Universal Crypto..."
+# 0.5 Universal Decryption: Property Detection
+log_msg "Detecting OS version via properties..."
 
-# Wait up to 10 seconds for /vendor/build.prop (Vendor partition mount)
+# Wait a maximum of 3 seconds for vendor properties to be read by init
 V_WAIT=0
-while [ ! -f /vendor/build.prop ] && [ $V_WAIT -lt 10 ]; do
-    log_msg "Waiting for /vendor/build.prop... (${V_WAIT}s)"
+while [ -z "$(getprop ro.vendor.build.version.release)" ] && [ $V_WAIT -lt 3 ]; do
+    log_msg "Waiting for vendor props... (${V_WAIT}s)"
     sleep 1
     V_WAIT=$((V_WAIT + 1))
 done
 
-if [ -f /vendor/build.prop ]; then
-    OS_VER=$(grep "ro.vendor.build.version.release=" /vendor/build.prop | head -n 1 | cut -d'=' -f2)
-    log_msg "Detected /vendor OS version: $OS_VER"
-    
+OS_VER=$(getprop ro.vendor.build.version.release)
+if [ ! -z "$OS_VER" ]; then
+    log_msg "Detected OS version: $OS_VER"
     if [ "$OS_VER" = "15" ]; then
-        log_msg "Android 15 detected! Overriding properties to fix Error -38..."
+        log_msg "Android 15 detected! Overriding properties..."
         resetprop ro.build.version.release 15
         resetprop ro.build.version.release_or_codename 15
         resetprop ro.vendor.build.version.release 15
         resetprop ro.system.build.version.release 15
-    else
-        log_msg "Android $OS_VER detected. Sticking with default (v14) to protect data."
     fi
 else
-    log_msg "Warning: /vendor/build.prop not found after wait. Using ramdisk defaults."
+    log_msg "Warning: Vendor props not found. Using defaults."
 fi
 
-# Ensure filesystem settles before module insertion
-sleep 2
+# Ensure filesystem is ready and stable
+sleep 1
 
 log_msg "--- Loading 10-module touch & thermal stack ---"
-# Foundational Stack
+# Foundational Stack (Load ASAP)
 insmod_safe /lib/modules/mtk-mbox.ko
 insmod_safe /lib/modules/mtk_tinysys_ipi.ko
 insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
 insmod_safe /lib/modules/mtk-afe-external.ko
+
+# Load SCP (Sensor Core Processor)
 insmod_safe /lib/modules/scp.ko
 
 # Thermal for stability
