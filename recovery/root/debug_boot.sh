@@ -43,9 +43,9 @@ getenforce
 # 0.5 Universal Decryption: Property Detection
 log_msg "Detecting OS version via properties..."
 
-# Wait a maximum of 3 seconds for vendor properties to be read by init
+# Wait a maximum of 2 seconds for vendor properties to be read by init
 V_WAIT=0
-while [ -z "$(getprop ro.vendor.build.version.release)" ] && [ $V_WAIT -lt 3 ]; do
+while [ -z "$(getprop ro.vendor.build.version.release)" ] && [ $V_WAIT -lt 2 ]; do
     log_msg "Waiting for vendor props... (${V_WAIT}s)"
     sleep 1
     V_WAIT=$((V_WAIT + 1))
@@ -68,19 +68,10 @@ fi
 # Ensure filesystem is ready and stable
 sleep 1
 
-log_msg "--- Loading 10-module touch & thermal stack ---"
-# Foundational Stack (Load ASAP)
-insmod_safe /lib/modules/mtk-mbox.ko
-insmod_safe /lib/modules/mtk_tinysys_ipi.ko
-insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
-insmod_safe /lib/modules/mtk-afe-external.ko
-
-# Load SCP (Sensor Core Processor)
+log_msg "--- Loading essential touch stack ---"
+# Load SCP (Sensor Core Processor) and Audio Front End (Dependencies)
 insmod_safe /lib/modules/scp.ko
-
-# Thermal for stability
-insmod_safe /lib/modules/thermal_interface.ko
-insmod_safe /lib/modules/soc_temp_lvts.ko
+insmod_safe /lib/modules/mtk-afe-external.ko
 
 # Touch Layer
 insmod_safe /lib/modules/lct_tp.ko
@@ -107,7 +98,7 @@ done
 # 2. TEE nodes permissions
 log_msg "Waiting for TEE device nodes..."
 TIMER=0
-while [ ! -c /dev/teepriv0 ] && [ $TIMER -lt 10 ]; do
+while [ ! -c /dev/teepriv0 ] && [ $TIMER -lt 5 ]; do
     sleep 1
     TIMER=$((TIMER + 1))
 done
@@ -138,28 +129,28 @@ stop gatekeeper-1-0
 stop keymint-mitee
 setprop twrp.vintf.ready 1
 
-# 5. Wait for keymint AIDL to register, then start keystore2
+# 5. Wait for keymint AIDL to register, then start keystore2 (BACKGROUNDED)
 # (keymint-mitee registers: android.hardware.security.keymint.IKeyMintDevice/default)
-log_msg "Waiting for keymint AIDL registration..."
-WAIT=0
-while [ $WAIT -lt 30 ]; do
-    if service list 2>/dev/null | grep -q "IKeyMintDevice"; then
-        log_msg "keymint AIDL registered after ${WAIT}s"
-        break
-    fi
-    sleep 1
-    WAIT=$((WAIT + 1))
-done
+log_msg "Backgrounding keymint AIDL wait to bypass watchdog..."
+(
+    WAIT=0
+    while [ $WAIT -lt 30 ]; do
+        if service list 2>/dev/null | grep -q "IKeyMintDevice"; then
+            log_msg "keymint AIDL registered after ${WAIT}s"
+            break
+        fi
+        sleep 1
+        WAIT=$((WAIT + 1))
+    done
 
-# Start keystore2 - it will use /tmp/misc/keystore (standard TWRP staging)
-log_msg "Starting keystore2..."
-start keystore2
-
-
+    # Start keystore2 - it will use /tmp/misc/keystore (standard TWRP staging)
+    log_msg "Starting keystore2..."
+    start keystore2
+) &
 
 # 6. Thermal & Health Fixes
-log_msg "Setting thermal permissions for UI..."
-chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
+# log_msg "Setting thermal permissions for UI..."
+# chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
 
 # 7. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
