@@ -116,48 +116,56 @@ start keystore2
 
 
 
-# 6. Load touch modules (safe insmod approach - avoids scp ordering issues)
-# Dependency chain: hf_manager -> xiaomi_tp -> lct_tp -> nt36528_spi
-# This runs AFTER all recovery modules are loaded, ensuring deps are satisfied.
-log_msg "--- Loading touch modules ---"
+# 6. Load touch modules (Delayed 9-module stack for stability)
+# Dependency chain: mtk-mbox -> ipi -> rpmsg -> afe -> scp -> touch_providers -> nt36528
+log_msg "Waiting 20 seconds for hardware stability before loading touch..."
+sleep 20
+
+log_msg "--- Loading 9-module touch stack ---"
+setenforce 0
 
 insmod_safe() {
     local mod="$1"
     local name=$(basename $mod .ko)
     if lsmod | grep -q "^${name} "; then
-        log_msg "Touch: $name already loaded, skipping"
+        log_msg "Touch: $name already loaded"
         return 0
     fi
     if [ ! -f "$mod" ]; then
-        log_msg "Touch: WARNING - $mod not found!"
+        log_msg "Touch: ERROR - $mod not found!"
         return 1
     fi
     insmod "$mod" 2>&1
     if lsmod | grep -q "^${name} "; then
-        log_msg "Touch: $name loaded OK"
+        log_msg "Touch: $name loaded"
         return 0
     else
-        log_msg "Touch: FAILED to load $name"
+        log_msg "Touch: ERROR loading $name"
         return 1
     fi
 }
 
-# Step 1: hf_manager (high frequency manager, no deps)
-insmod_safe /lib/modules/hf_manager.ko
+# Core Mailbox & IPI
+insmod_safe /lib/modules/mtk-mbox.ko
+insmod_safe /lib/modules/mtk_tinysys_ipi.ko
+insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
 
-# Step 2: xiaomi_tp (no deps)
+# Audio Prerequisite for SCP
+insmod_safe /lib/modules/mtk-afe-external.ko
+
+# Sensor Core Processor (Critical hardware link)
+insmod_safe /lib/modules/scp.ko
+
+# Touch Providers
+insmod_safe /lib/modules/lct_tp.ko
+insmod_safe /lib/modules/hf_manager.ko
 insmod_safe /lib/modules/xiaomi_tp.ko
 
-# Step 3: lct_tp (depends on hf_manager)
-insmod_safe /lib/modules/lct_tp.ko
-
-# Step 4: nt36528_spi (depends on lct_tp, xiaomi_tp, scp, charger_framework, mediatek-drm - already loaded)
-# Note: scp is loaded by TW_LOAD_VENDOR_BOOT_MODULES from vendor_boot ramdisk.
-# mediatek-drm, mtk_charger_framework, spi-mt65xx, mtk_tinysys_ipi are in modules.load.recovery.
+# Core Touch Driver
 insmod_safe /lib/modules/nt36528_spi.ko
 
-log_msg "Touch module load complete"
-log_msg "Loaded touch modules: $(lsmod | grep -E 'nt36|lct_tp|xiaomi_tp|hf_manager' | awk '{print $1}' | tr '\n' ' ')"
+log_msg "Touch stack loading sequence finished."
+log_msg "Active Modules: $(lsmod | grep -E 'nt36|lct_tp|xiaomi_tp|hf_manager|scp|afe|ipi|mbox' | awk '{print $1}' | tr '\n' ' ')"
 
 # 7. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
