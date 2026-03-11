@@ -14,12 +14,14 @@ on init
     setprop sys.usb.ffs.aio_compat 1
     setprop crypto.ready 1
     
-    # Start debug_boot IMMEDIATELY to force permissive and setup paths early
-    start debug_boot
+    setprop crypto.ready 1
 
     # Load thermal modules for CPU temperature display
     insmod /lib/modules/thermal_interface.ko
     insmod /lib/modules/soc_temp_lvts.ko
+
+    # Load Touch and Display modules via isolated service to prevent race condition
+    start load-touch-modules
 
 # For vibrator
     write /sys/class/leds/vibrator/trigger "transient"
@@ -42,7 +44,8 @@ on post-fs
     mkdir /tmp/keystore 0775 root root
     chown root root /tmp/keystore
     
-    # debug_boot now started in 'on init'
+    # Start debug_boot script to handle touch, properties, and VINTF patching
+    start debug_boot
     
     # Restart managers to pick up new manifest (handled by debug_boot.sh too, but safe here)
     # restart servicemanager
@@ -181,4 +184,10 @@ service debug_boot /system/bin/sh /debug_boot.sh
 
 # Removed redundant debug_boot trigger (started in post-fs)
 
-
+service load-touch-modules /system/bin/modprobe --all=/lib/modules/modules.load.touch --dirname=/lib/modules
+    class core
+    user root
+    group root
+    oneshot
+    disabled
+    seclabel u:r:recovery:s0

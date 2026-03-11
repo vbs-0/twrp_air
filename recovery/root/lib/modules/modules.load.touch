@@ -1,0 +1,9 @@
+mtk_rpmsg_mbox.ko
+mtk-mbox.ko
+mtk_tinysys_ipi.ko
+mtk-afe-external.ko
+scp.ko
+lct_tp.ko
+xiaomi_tp.ko
+hf_manager.ko
+nt36528_spi.ko
