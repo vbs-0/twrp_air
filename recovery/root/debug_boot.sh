@@ -160,7 +160,11 @@ start keystore2
 
 
 
-# 6. Diagnostics
+# 6. Thermal & Health Fixes
+log_msg "Setting thermal permissions for UI..."
+chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
+
+# 7. Diagnostics
 log_msg "--- DIAGNOSTICS ---"
 getprop | grep -E 'init.svc.(tee|keystore|keymint|gatekeeper)|twrp|vintf|vold'
 
