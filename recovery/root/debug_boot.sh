@@ -8,17 +8,6 @@ log_msg() {
     echo "$1" > /dev/kmsg
 }
 
-exec > $LOGFILE 2>&1
-
-log_msg "--- TWRP @vbs_1 & @dream_7x DEBUG BOOT START ---"
-date
-id
-
-# 0. Force SELinux Permissive and keep it that way
-log_msg "Forcing SELinux Permissive..."
-setenforce 0
-getenforce
-
 insmod_safe() {
     local mod="$1"
     local name=$(basename $mod .ko)
@@ -40,25 +29,16 @@ insmod_safe() {
     fi
 }
 
-log_msg "--- Loading 10-module touch & thermal stack ---"
-# Foundational Stack
-insmod_safe /lib/modules/mtk-mbox.ko
-insmod_safe /lib/modules/mtk_tinysys_ipi.ko
-insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
-insmod_safe /lib/modules/mtk-afe-external.ko
-insmod_safe /lib/modules/scp.ko
+exec > $LOGFILE 2>&1
 
-# Thermal for stability
-insmod_safe /lib/modules/thermal_interface.ko
-insmod_safe /lib/modules/soc_temp_lvts.ko
+log_msg "--- TWRP @vbs_1 & @dream_7x DEBUG BOOT START ---"
+date
+id
 
-# Touch Layer
-insmod_safe /lib/modules/lct_tp.ko
-insmod_safe /lib/modules/hf_manager.ko
-insmod_safe /lib/modules/xiaomi_tp.ko
-insmod_safe /lib/modules/nt36528_spi.ko
-
-log_msg "Touch stack loading sequence finished."
+# 0. Force SELinux Permissive and keep it that way
+log_msg "Forcing SELinux Permissive..."
+setenforce 0
+getenforce
 
 # 0.5 Universal Decryption: Dynamic Version Detection
 # This ensures that Android 14 devices stay on v14 (to prevent permanent key upgrades)
@@ -89,6 +69,29 @@ if [ -f /vendor/build.prop ]; then
 else
     log_msg "Warning: /vendor/build.prop not found after wait. Using ramdisk defaults."
 fi
+
+# Ensure filesystem settles before module insertion
+sleep 2
+
+log_msg "--- Loading 10-module touch & thermal stack ---"
+# Foundational Stack
+insmod_safe /lib/modules/mtk-mbox.ko
+insmod_safe /lib/modules/mtk_tinysys_ipi.ko
+insmod_safe /lib/modules/mtk_rpmsg_mbox.ko
+insmod_safe /lib/modules/mtk-afe-external.ko
+insmod_safe /lib/modules/scp.ko
+
+# Thermal for stability
+insmod_safe /lib/modules/thermal_interface.ko
+insmod_safe /lib/modules/soc_temp_lvts.ko
+
+# Touch Layer
+insmod_safe /lib/modules/lct_tp.ko
+insmod_safe /lib/modules/hf_manager.ko
+insmod_safe /lib/modules/xiaomi_tp.ko
+insmod_safe /lib/modules/nt36528_spi.ko
+
+log_msg "Touch stack loading sequence finished."
 
 # Ensure utilities are executable
 chmod 755 /system/bin/mtk_plpath_utils

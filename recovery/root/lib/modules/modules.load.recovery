@@ -189,13 +189,3 @@ arm_dsu_pmu.ko
 uload_ind.ko
 load_track.ko
 sec.ko
-# TWRP Touch Driver Stack
-mtk-mbox.ko
-mtk_rpmsg_mbox.ko
-mtk_tinysys_ipi.ko
-mtk-afe-external.ko
-scp.ko
-lct_tp.ko
-hf_manager.ko
-xiaomi_tp.ko
-nt36528_spi.ko
