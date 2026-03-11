@@ -29,6 +29,22 @@ insmod_safe() {
     fi
 }
 
+modprobe_safe() {
+    local name="$1"
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name already loaded"
+        return 0
+    fi
+    modprobe "$name" 2>&1
+    if lsmod | grep -q "^${name} "; then
+        log_msg "Touch: $name loaded via modprobe"
+        return 0
+    else
+        log_msg "Touch: ERROR modprobing $name"
+        return 1
+    fi
+}
+
 exec > $LOGFILE 2>&1
 
 log_msg "--- TWRP @vbs_1 & @dream_7x DEBUG BOOT START ---"
@@ -77,7 +93,7 @@ insmod_safe /lib/modules/mtk-afe-external.ko
 insmod_safe /lib/modules/lct_tp.ko
 insmod_safe /lib/modules/hf_manager.ko
 insmod_safe /lib/modules/xiaomi_tp.ko
-insmod_safe /lib/modules/nt36528_spi.ko
+modprobe_safe nt36528_spi
 
 log_msg "Touch stack loading sequence finished."
 
