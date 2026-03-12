@@ -5,3 +5,11 @@ scp.ko
 lct_tp.ko
 xiaomi_tp.ko
 nt36528_spi.ko
+mtk_gpufreq_wrapper.ko
+thermal_interface.ko
+soc_temp_lvts.ko
+mi_thermal_interface.ko
+pmic_temp.ko
+board_temp.ko
+thermal-generic-adc.ko
+thermal_trace.ko
