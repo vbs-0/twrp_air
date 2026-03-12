@@ -1,3 +1,5 @@
 mtk-afe-external.ko
 scp.ko
+lct_tp.ko
+xiaomi_tp.ko
 nt36528_spi.ko
