@@ -1,7 +1,3 @@
-# Touch framework (SCP-independent, stable)
-mtk_rpmsg_mbox.ko
-mtk_tinysys_ipi.ko
-mt6377-accdet.ko
-lct_tp.ko
-hf_manager.ko
-xiaomi_tp.ko
+mtk-afe-external.ko
+scp.ko
+nt36528_spi.ko
