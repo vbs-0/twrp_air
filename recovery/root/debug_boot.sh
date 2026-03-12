@@ -14,7 +14,28 @@ sleep 1
 # Ensure utilities are executable
 chmod 755 /system/bin/mtk_plpath_utils
 
-# 1. Fix Block Device Paths
+# 1. Wait for Vendor mount (Race Condition Fix)
+log_msg "Waiting for vendor mount..."
+TIMER=0
+while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
+    sleep 1
+    TIMER=$((TIMER + 1))
+done
+
+# 2. Android 15 (HIOS2) Version Sensing
+log_msg "Detecting Android version..."
+OS_VER=$(getprop ro.build.version.release)
+if [ "$OS_VER" = "15" ]; then
+    log_msg "Android 15 detected — applying PLATFORM_VERSION override for TEE compatibility"
+    /system/bin/resetprop ro.build.version.release 14
+    /system/bin/resetprop ro.build.version.release_or_codename 14
+fi
+
+# 3. Thermal Permissions
+log_msg "Setting thermal permissions..."
+chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
+
+# 4. Fix Block Device Paths
 log_msg "Fixing block device paths..."
 mkdir -p /dev/block/platform/bootdevice/by-name/
 chcon u:object_r:block_device:s0 /dev/block/platform/bootdevice/by-name/ 2>/dev/null
