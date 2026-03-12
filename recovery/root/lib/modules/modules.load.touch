@@ -1,3 +1,5 @@
+mtk_rpmsg_mbox.ko
+mtk_tinysys_ipi.ko
 mtk-afe-external.ko
 scp.ko
 lct_tp.ko
