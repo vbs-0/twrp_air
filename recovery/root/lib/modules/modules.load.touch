@@ -1,13 +1,7 @@
-# SCP dependency chain (loads at 'on boot', after DT is mapped + SCP reserved memory is ready)
+# Touch framework (SCP-independent, stable)
 mtk_rpmsg_mbox.ko
 mtk_tinysys_ipi.ko
-mtk-afe-external.ko
-scp.ko
-# Touch framework
 mt6377-accdet.ko
 lct_tp.ko
 hf_manager.ko
 xiaomi_tp.ko
-# SPI touch drivers (depend on scp_ipidev from scp.ko)
-nt36528_spi.ko
-ft8057p_spi.ko
