@@ -22,13 +22,25 @@ while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
     TIMER=$((TIMER + 1))
 done
 
-# 2. Android 15 (HIOS2) Version Sensing
-log_msg "Detecting Android version..."
-OS_VER=$(getprop ro.build.version.release)
-if [ "$OS_VER" = "15" ]; then
-    log_msg "Android 15 detected — applying PLATFORM_VERSION override for TEE compatibility"
-    /system/bin/resetprop ro.build.version.release 14
-    /system/bin/resetprop ro.build.version.release_or_codename 14
+# 2. Dynamic Identity Restoration (HIOS1/HIOS2 support)
+log_msg "Sensing device identity from vendor..."
+# Mount vendor if not already handled by init
+mkdir -p /mnt/vendor/persist
+mount /dev/block/by-name/persist /mnt/vendor/persist 2>/dev/null
+
+# Extract REAL Version and Security Patch from the phone itself
+REAL_VER=$(grep "ro.vendor.build.version.release=" /vendor/build.prop | cut -d'=' -f2)
+REAL_PATCH=$(grep "ro.vendor.build.security_patch=" /vendor/build.prop | cut -d'=' -f2)
+
+if [ -n "$REAL_VER" ]; then
+    log_msg "Detected Native OS: Android $REAL_VER — Patch: $REAL_PATCH"
+    # Match the TEE's expectations exactly
+    /system/bin/resetprop ro.build.version.release "$REAL_VER"
+    /system/bin/resetprop ro.build.version.release_or_codename "$REAL_VER"
+    /system/bin/resetprop ro.build.version.security_patch "$REAL_PATCH"
+    /system/bin/resetprop ro.vendor.build.security_patch "$REAL_PATCH"
+else
+    log_msg "Vendor sensing failed — falling back to safe defaults"
 fi
 
 # 3. Thermal Permissions
