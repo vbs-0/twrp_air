@@ -60,6 +60,8 @@ if [ -d /vendor/etc/vintf ]; then
     mkdir -p /tmp/vintf
     cp -rf /vendor/etc/vintf/* /tmp/vintf/
     find /tmp/vintf -type f -name "*.xml" -exec sed -i 's/version="5.0"/version="4.0"/g' {} +
+    chmod -R 755 /tmp/vintf
+    chown -R system:system /tmp/vintf
     mount -o bind /tmp/vintf /vendor/etc/vintf
 fi
 
