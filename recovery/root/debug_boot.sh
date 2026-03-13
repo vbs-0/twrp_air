@@ -29,8 +29,8 @@ mkdir -p /mnt/vendor/persist
 mount /dev/block/by-name/persist /mnt/vendor/persist 2>/dev/null
 
 # Extract REAL Version and Security Patch from the phone itself
-REAL_VER=$(grep "ro.vendor.build.version.release=" /vendor/build.prop | cut -d'=' -f2)
-REAL_PATCH=$(grep "ro.vendor.build.security_patch=" /vendor/build.prop | cut -d'=' -f2)
+REAL_VER=$(grep -m 1 "ro.vendor.build.version.release=" /vendor/build.prop | cut -d'=' -f2)
+REAL_PATCH=$(grep -m 1 "ro.vendor.build.security_patch=" /vendor/build.prop | cut -d'=' -f2)
 
 if [ -n "$REAL_VER" ]; then
     log_msg "Detected Native OS: Android $REAL_VER — Patch: $REAL_PATCH"
