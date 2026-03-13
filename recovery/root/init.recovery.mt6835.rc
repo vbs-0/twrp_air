@@ -152,7 +152,6 @@ on property:hwservicemanager.ready=true && property:twrp.vintf.ready=1
     start tee-supplicant
     start gatekeeper-1-0
     start keymint-mitee
-    start keystore2
 
 on property:ro.crypto.state=unsupported
     stop tee-supplicant

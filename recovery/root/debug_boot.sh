@@ -85,8 +85,10 @@ setprop twrp.vintf.ready 1
     start keystore2
     log_msg "Watcher thread finished."
 ) &
+WATCHER_PID=$!
 
-log_msg "--- TWRP DEBUG BOOT END ---"
+log_msg "--- TWRP DEBUG BOOT END (Waiting for watcher ${WATCHER_PID}) ---"
+wait $WATCHER_PID
 exit 0
 # Persistence loop disabled to prevent instability
 # (Service monitoring should be handled by init.recovery.rc triggers)
