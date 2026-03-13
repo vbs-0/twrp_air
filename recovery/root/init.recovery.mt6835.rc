@@ -111,7 +111,7 @@ service mtk.plpath.utils.link /system/bin/mtk_plpath_utils
 
 service keymint-mitee /vendor/bin/hw/android.hardware.security.keymint@2.0-service.mitee
     class early_hal
-    user root
+    user system
     group system drmrpc
     interface aidl android.hardware.security.keymint.IKeyMintDevice/default
     interface aidl android.hardware.security.keymint.IRemotelyProvisionedComponent/default

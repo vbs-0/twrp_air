@@ -1,125 +1,92 @@
 #!/system/bin/sh
 set -x
-# TWRP Debug Boot Script - @vbs_1 & @dream_7x - Final-Success
-LOGFILE="/tmp/debug_boot.log"
+# TWRP Debug Boot Script - @vbs_1 & @dream_7x - Recovery-Sync
+LOGFILE="/tmp/recovery_debug.log"
 
 log_msg() {
-    echo "$1"
-    echo "$1" > /dev/kmsg
+    MSG="[debug_boot] $1"
+    echo "$MSG" | tee -a "$LOGFILE" > /dev/kmsg
 }
 
-# Ensure filesystem is ready and stable
-sleep 1
+exec 2>>"$LOGFILE" # Capture all stderr to logfile
 
-# Ensure utilities are executable
-chmod 755 /system/bin/mtk_plpath_utils
+log_msg "--- TWRP DEBUG BOOT START ---"
 
-# 1. Wait for Vendor mount (Race Condition Fix)
-log_msg "Waiting for vendor mount..."
-TIMER=0
-while [ ! -f /vendor/build.prop ] && [ $TIMER -lt 10 ]; do
-    sleep 1
-    TIMER=$((TIMER + 1))
-done
+# 1. Identity restoration
+log_msg "Extracting device identities..."
 
-# 2. Dynamic Identity Restoration (HIOS1/HIOS2 support)
-log_msg "Sensing device identity from vendor..."
-# Mount vendor if not already handled by init
-mkdir -p /mnt/vendor/persist
-mount /dev/block/by-name/persist /mnt/vendor/persist 2>/dev/null
+# Try to get real values. Fallback to current if sensing fails.
+# Real values are usually in /vendor/build.prop
+VENDOR_PROP="/vendor/build.prop"
+[ -f /vendor/etc/build.prop ] && VENDOR_PROP="/vendor/etc/build.prop"
 
-# Extract REAL Version and Security Patch from the phone itself
-REAL_VER=$(grep -m 1 "ro.vendor.build.version.release=" /vendor/build.prop | cut -d'=' -f2)
-REAL_PATCH=$(grep -m 1 "ro.vendor.build.security_patch=" /vendor/build.prop | cut -d'=' -f2)
+REAL_VER=$(getprop ro.vendor.build.version.release)
+REAL_PATCH=$(getprop ro.vendor.build.security_patch)
 
-if [ -n "$REAL_VER" ]; then
-    log_msg "Detected Native OS: Android $REAL_VER — Patch: $REAL_PATCH"
-    # Match the TEE's expectations exactly
+# If getprop gave us the "fake" 2099 or empty, try reading the file directly
+if [ "$REAL_PATCH" = "2099-12-31" ] || [ -z "$REAL_PATCH" ]; then
+    log_msg "getprop reported 2099 or empty. Scanning $VENDOR_PROP directly..."
+    if [ -f "$VENDOR_PROP" ]; then
+        REAL_VER=$(grep -m 1 "ro.vendor.build.version.release=" "$VENDOR_PROP" | cut -d'=' -f2)
+        FILE_PATCH=$(grep -m 1 "ro.vendor.build.security_patch=" "$VENDOR_PROP" | cut -d'=' -f2)
+        [ -n "$FILE_PATCH" ] && [ "$FILE_PATCH" != "2099-12-31" ] && REAL_PATCH="$FILE_PATCH"
+    fi
+fi
+
+if [ -n "$REAL_VER" ] && [ "$REAL_VER" != "14" ]; then
+    log_msg "Applying Identity: Android $REAL_VER — Patch: $REAL_PATCH"
     /system/bin/resetprop ro.build.version.release "$REAL_VER"
     /system/bin/resetprop ro.build.version.release_or_codename "$REAL_VER"
     /system/bin/resetprop ro.build.version.security_patch "$REAL_PATCH"
-    /system/bin/resetprop ro.vendor.build.security_patch "$REAL_PATCH"
 else
-    log_msg "Vendor sensing failed — falling back to safe defaults"
+    log_msg "Identity check skipped or version matches stock (14)."
 fi
 
-# 3. Thermal Permissions
-log_msg "Setting thermal permissions..."
-chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
-
-# 4. Fix Block Device Paths
-log_msg "Fixing block device paths..."
+# 2. Block Device Alignment (Mediatek)
+log_msg "Aligning block device paths..."
 mkdir -p /dev/block/platform/bootdevice/by-name/
-chcon u:object_r:block_device:s0 /dev/block/platform/bootdevice/by-name/ 2>/dev/null
-
 for part in preloader_raw_a preloader_raw_b; do
-    if [ ! -L /dev/block/platform/bootdevice/by-name/$part ]; then
-        ln -s /dev/block/by-name/$part /dev/block/platform/bootdevice/by-name/$part 2>/dev/null
-    fi
+    [ -L /dev/block/by-name/$part ] && ln -sf /dev/block/by-name/$part /dev/block/platform/bootdevice/by-name/$part
 done
 
-# 2. TEE nodes permissions
-log_msg "Waiting for TEE device nodes..."
-TIMER=0
-while [ ! -c /dev/teepriv0 ] && [ $TIMER -lt 5 ]; do
-    sleep 1
-    TIMER=$((TIMER + 1))
-done
+# 3. TEE Node Readiness
+log_msg "Ensuring TEE node permissions..."
+chmod 0666 /dev/teepriv0 /dev/tee0 2>/dev/null
+chown system:system /dev/teepriv0 /dev/tee0 2>/dev/null
 
-if [ -c /dev/teepriv0 ]; then
-    log_msg "Found TEE nodes — setting perms"
-    chmod 0666 /dev/teepriv0 /dev/tee0 2>/dev/null
-    chown system:system /dev/teepriv0 /dev/tee0 2>/dev/null
-    ls -lZ /dev/teepriv0 /dev/tee0
-fi
-
-# 3. VINTF patching (Version 4.0 compatibility)
-log_msg "Applying VINTF overrides..."
+# 4. VINTF manifest sync
+log_msg "Patching VINTF manifest..."
 if [ -d /vendor/etc/vintf ]; then
     mkdir -p /tmp/vintf
     cp -rf /vendor/etc/vintf/* /tmp/vintf/
     find /tmp/vintf -type f -name "*.xml" -exec sed -i 's/version="5.0"/version="4.0"/g' {} +
-    chmod -R 755 /tmp/vintf
-    chown -R system:system /tmp/vintf
     mount -o bind /tmp/vintf /vendor/etc/vintf
 fi
 
-# 4. Stop early services, signal VINTF ready
-# This will trigger the TEE chain startup in recovery.rc
-log_msg "Stopping stale services, signaling VINTF ready..."
+# 5. Signal Readiness & Clean Startup
+log_msg "Signaling VINTF ready..."
 stop keystore2
 stop gatekeeper-1-0
 stop keymint-mitee
 setprop twrp.vintf.ready 1
 
-# 5. Wait for keymint AIDL to register, then start keystore2 (BACKGROUNDED)
-# (keymint-mitee registers: android.hardware.security.keymint.IKeyMintDevice/default)
-log_msg "Backgrounding keymint AIDL wait to bypass watchdog..."
+# 6. Wait for KeyMint and Start Keystore (Backgrounded)
 (
+    log_msg "Starting AIDL watcher thread..."
     WAIT=0
-    while [ $WAIT -lt 30 ]; do
+    while [ $WAIT -lt 20 ]; do
         if service list 2>/dev/null | grep -q "IKeyMintDevice"; then
-            log_msg "keymint AIDL registered after ${WAIT}s"
+            log_msg "KeyMint AIDL found after ${WAIT}s. Starting Keystore2..."
             break
         fi
         sleep 1
         WAIT=$((WAIT + 1))
     done
-
-    # Start keystore2 - it will use /tmp/misc/keystore (standard TWRP staging)
-    log_msg "Starting keystore2..."
     start keystore2
+    log_msg "Watcher thread finished."
 ) &
 
-# 6. Thermal & Health Fixes
-# log_msg "Setting thermal permissions for UI..."
-# chmod 0666 /sys/class/thermal/thermal_zone*/temp 2>/dev/null
-
-# 7. Diagnostics
-log_msg "--- DIAGNOSTICS ---"
-getprop | grep -E 'init.svc.(tee|keystore|keymint|gatekeeper)|twrp|vintf|vold'
-
-log_msg "--- TWRP DEBUG BOOT SYNC END ---"
+log_msg "--- TWRP DEBUG BOOT END ---"
 exit 0
 # Persistence loop disabled to prevent instability
 # (Service monitoring should be handled by init.recovery.rc triggers)
