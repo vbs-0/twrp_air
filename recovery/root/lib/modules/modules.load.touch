@@ -1,9 +1,6 @@
-/lib/modules/mtk-mbox.ko
-/lib/modules/mtk_tinysys_ipi.ko
 /lib/modules/mtk_rpmsg_mbox.ko
+/lib/modules/mtk_tinysys_ipi.ko
 /lib/modules/mtk-afe-external.ko
-/lib/modules/gpueb.ko
-/lib/modules/mtk_gpu_hal.ko
 /lib/modules/scp.ko
 /lib/modules/lct_tp.ko
 /lib/modules/xiaomi_tp.ko
@@ -16,7 +13,3 @@
 /lib/modules/board_temp.ko
 /lib/modules/thermal-generic-adc.ko
 /lib/modules/thermal_trace.ko
-/lib/modules/mtk_pbm.ko
-/lib/modules/mtk_battery_oc_throttling.ko
-/lib/modules/mtk_bp_thl.ko
-/lib/modules/mtk_low_battery_throttling.ko
