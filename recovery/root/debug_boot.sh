@@ -56,7 +56,7 @@ chown system:system /dev/teepriv0 /dev/tee0 2>/dev/null
 
 # 4. Touch Module Fallback (Manual insmod for HIOS2 compatibility)
 log_msg "Loading touch modules (fallback sync)..."
-for mod in scp.ko mtk_rpmsg_mbox.ko mtk_tinysys_ipi.ko mtk-afe-external.ko xiaomi_tp.ko lct_tp.ko nt36528_spi.ko ft8057p_spi.ko; do
+for mod in mtk-mbox.ko scp.ko mtk_rpmsg_mbox.ko mtk_tinysys_ipi.ko mtk-afe-external.ko xiaomi_tp.ko lct_tp.ko nt36528_spi.ko ft8057p_spi.ko; do
     if [ -f "/lib/modules/$mod" ]; then
         lsmod | grep -q "${mod%.ko}" || insmod "/lib/modules/$mod"
     fi
