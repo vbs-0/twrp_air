@@ -1,12 +1,11 @@
 # SELinux rules for TWRP recovery (Android 15)
 
+# Set recovery to permissive to bypass granular denials while maintaining buildability
+permissive recovery;
+
 # Allow recovery to search metadata for vold keys
 allow recovery vold_metadata_file:dir { search read open };
 allow recovery vold_metadata_file:file { read open getattr };
-
-# Allow recovery to use keystore2 / vold keys
-allow recovery vold_key:keystore2_key { manage_blob use get_info };
-allow recovery keystore2_key:keystore2_key { manage_blob use get_info };
 
 # Allow recovery to access binder/vndbinder for decryption HALs
 allow recovery vndbinder_device:chr_file { ioctl open read write map };
@@ -18,3 +17,8 @@ allow recovery device_config_input_native_boot_prop:file { getattr map open read
 
 # General kmsg access
 allow recovery kmsg_device:chr_file { getattr open read write };
+
+# Mitee TEE access (tee-supplicant runs in recovery domain)
+allow recovery mnt_vendor_file:dir { add_name search write };
+allow recovery mnt_vendor_file:file { create getattr open read write };
+allow recovery device:chr_file { getattr ioctl open read write setattr };
