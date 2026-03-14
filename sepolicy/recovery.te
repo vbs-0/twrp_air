@@ -1,0 +1,20 @@
+# SELinux rules for TWRP recovery (Android 15)
+
+# Allow recovery to search metadata for vold keys
+allow recovery vold_metadata_file:dir { search read open };
+allow recovery vold_metadata_file:file { read open getattr };
+
+# Allow recovery to use keystore2 / vold keys
+allow recovery vold_key:keystore2_key { manage_blob use get_info };
+allow recovery keystore2_key:keystore2_key { manage_blob use get_info };
+
+# Allow recovery to access binder/vndbinder for decryption HALs
+allow recovery vndbinder_device:chr_file { ioctl open read write map };
+allow recovery binder_device:chr_file { ioctl open read write map };
+
+# Allow recovery to read properties for display/input
+allow recovery surfaceflinger_display_prop:file { getattr map open read };
+allow recovery device_config_input_native_boot_prop:file { getattr map open read };
+
+# General kmsg access
+allow recovery kmsg_device:chr_file { getattr open read write };

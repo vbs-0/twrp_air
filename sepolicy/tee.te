@@ -1,0 +1,8 @@
+# SELinux rules for tee-supplicant (Mitee)
+
+# Allow Mitee to access its persistent data in vendor
+allow tee mnt_vendor_file:dir { add_name search write };
+allow tee mnt_vendor_file:file { create getattr open read write };
+
+# Allow access to tee device nodes
+allow tee device:chr_file { getattr ioctl open read write setattr };
