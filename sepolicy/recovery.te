@@ -11,6 +11,8 @@ allow recovery vold_metadata_file:file { read open getattr };
 allow recovery recovery:binder { call transfer };
 allow servicemanager recovery:binder { call transfer };
 allow keystore recovery:binder { call transfer };
+allow recovery keystore:binder { call transfer };
+allow recovery keystore2:binder { call transfer };
 allow recovery vndbinder_device:chr_file { ioctl map open read write };
 
 # Allow recovery to access critical data files for decryption verification
@@ -40,10 +42,19 @@ allow recovery self:capability sys_module;
 allow recovery rootfs:system module_load;
 
 # Hardware & Health Services
+allow recovery hal_keymint_service:service_manager find;
+allow recovery hal_gatekeeper_hwservice:hwservice_manager { add find };
+allow recovery hal_remotelyprovisionedcomponent_service:service_manager find;
 allow recovery sysfs:file { getattr open read };
 allow recovery sysfs_block:dir search;
 allow recovery self:capability2 wake_alarm;
 allow recovery self:netlink_kobject_uevent_socket { bind create getopt read setopt };
+
+# Keystore2 / Vold Key Management (Android 15)
+allow recovery keystore2_key:keystore2_key { manage_blob use get_info rebind };
+allow recovery vold_key:keystore2_key { manage_blob use get_info rebind };
+allow recovery hal_keymint_service:service_manager { add find };
+allow recovery hal_remotelyprovisionedcomponent_service:service_manager { add find };
 
 # Block Device Management (mtk_plpath_utils)
 allow recovery block_device:dir { add_name write };
