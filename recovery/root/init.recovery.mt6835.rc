@@ -183,10 +183,4 @@ service debug_boot /system/bin/sh /debug_boot.sh
 
 # Removed redundant debug_boot trigger (started in post-fs)
 
-service load-touch-modules /system/bin/modprobe --all=/lib/modules/modules.load.touch --dirname=/lib/modules
-    class core
-    user root
-    group root
-    oneshot
-    # disabled
-    seclabel u:r:recovery:s0
+# Removed load-touch-modules (redundant with modules.load)
