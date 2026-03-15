@@ -1,8 +1,6 @@
 # SELinux rules for TWRP recovery (Android 15)
-# Declare missing types to allow compilation
+# Declare missing types to allow compilation (only if not in base policy)
 type keystore2, domain;
-type keystore2_key, keystore2_key_type;
-type vold_key, keystore2_key_type;
 type hal_keymint_service, service_manager_type;
 type hal_gatekeeper_hwservice, hwservice_manager_type;
 type hal_remotelyprovisionedcomponent_service, service_manager_type;
