@@ -14,3 +14,4 @@
 /lib/modules/board_temp.ko
 /lib/modules/thermal-generic-adc.ko
 /lib/modules/thermal_trace.ko
+/lib/modules/ft8057p_spi.ko

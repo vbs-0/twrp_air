@@ -11,10 +11,11 @@ allow recovery vold_metadata_file:file { read open getattr };
 allow recovery recovery:binder { call transfer };
 allow servicemanager recovery:binder { call transfer };
 allow keystore recovery:binder { call transfer };
+allow recovery vndbinder_device:chr_file { ioctl map open read write };
 
 # Allow recovery to access critical data files for decryption verification
-allow recovery system_data_file:dir { getattr read open search };
-allow recovery system_data_file:file { getattr read open ioctl lock };
+allow recovery system_data_file:dir { getattr read open search create write add_name };
+allow recovery system_data_file:file { getattr read open ioctl lock create write append };
 allow recovery vold_data_file:dir { getattr read open search };
 allow recovery vold_data_file:file { getattr read open };
 allow recovery keystore_data_file:dir { getattr read open search };
@@ -23,8 +24,27 @@ allow recovery keystore_data_file:file { getattr read open };
 # Allow setting critical properties for initialization
 allow recovery restorecon_prop:property_service set;
 allow recovery exported_system_prop:property_service set;
+allow recovery hwservicemanager_prop:property_service set;
+allow recovery keystore_crash_prop:property_service set;
+allow recovery vendor_security_patch_level_prop:file { getattr map open read };
+allow recovery keystore_crash_prop:file { getattr map open read };
 
 # Mitee TEE access
 allow recovery mnt_vendor_file:dir { add_name search write getattr };
 allow recovery mnt_vendor_file:file { create getattr open read write ioctl };
 allow recovery device:chr_file { getattr ioctl open read write setattr };
+allow recovery kmsg_device:chr_file { getattr open write };
+
+# Kernel Module Loading
+allow recovery self:capability sys_module;
+allow recovery rootfs:system module_load;
+
+# Hardware & Health Services
+allow recovery sysfs:file { getattr open read };
+allow recovery sysfs_block:dir search;
+allow recovery self:capability2 wake_alarm;
+allow recovery self:netlink_kobject_uevent_socket { bind create getopt read setopt };
+
+# Block Device Management (mtk_plpath_utils)
+allow recovery block_device:dir { add_name write };
+allow recovery block_device:lnk_file create;
