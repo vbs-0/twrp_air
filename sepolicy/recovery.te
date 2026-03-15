@@ -7,18 +7,29 @@ permissive recovery;
 allow recovery vold_metadata_file:dir { search read open };
 allow recovery vold_metadata_file:file { read open getattr };
 
-# Allow recovery to access binder/vndbinder for decryption HALs
-allow recovery vndbinder_device:chr_file { ioctl open read write map };
-allow recovery binder_device:chr_file { ioctl open read write map };
+# Allow recovery to handle binder transfers for itself (decryption services)
+allow recovery recovery:binder { call transfer };
+allow servicemanager recovery:binder { call transfer };
+allow keystore recovery:binder { call transfer };
 
-# Allow recovery to read properties for display/input
-allow recovery surfaceflinger_display_prop:file { getattr map open read };
-allow recovery device_config_input_native_boot_prop:file { getattr map open read };
+# Allow recovery to access critical data files for decryption verification
+allow recovery system_data_file:dir { getattr read open search };
+allow recovery system_data_file:file { getattr read open ioctl lock };
+allow recovery vold_data_file:dir { getattr read open search };
+allow recovery vold_data_file:file { getattr read open };
+allow recovery keystore_data_file:dir { getattr read open search };
+allow recovery keystore_data_file:file { getattr read open };
 
-# General kmsg access
-allow recovery kmsg_device:chr_file { getattr open read write };
+# Allow setting critical properties for initialization
+allow recovery restorecon_prop:property_service set;
+allow recovery exported_system_prop:property_service set;
 
-# Mitee TEE access (tee-supplicant runs in recovery domain)
-allow recovery mnt_vendor_file:dir { add_name search write };
-allow recovery mnt_vendor_file:file { create getattr open read write };
+# Advanced SELinux/Kernel operations
+allow recovery recovery:security { compute_av compute_create };
+allow recovery self:netlink_kobject_uevent_socket { create read setopt bind };
+
+# Mitee TEE access
+allow recovery mnt_vendor_file:dir { add_name search write getattr };
+allow recovery mnt_vendor_file:file { create getattr open read write ioctl };
 allow recovery device:chr_file { getattr ioctl open read write setattr };
+allow recovery sysfs:file { getattr open read write };
