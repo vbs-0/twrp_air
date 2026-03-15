@@ -24,12 +24,7 @@ allow recovery keystore_data_file:file { getattr read open };
 allow recovery restorecon_prop:property_service set;
 allow recovery exported_system_prop:property_service set;
 
-# Advanced SELinux/Kernel operations
-allow recovery recovery:security { compute_av compute_create };
-allow recovery self:netlink_kobject_uevent_socket { create read setopt bind };
-
 # Mitee TEE access
 allow recovery mnt_vendor_file:dir { add_name search write getattr };
 allow recovery mnt_vendor_file:file { create getattr open read write ioctl };
 allow recovery device:chr_file { getattr ioctl open read write setattr };
-allow recovery sysfs:file { getattr open read write };

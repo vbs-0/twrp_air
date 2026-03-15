@@ -49,18 +49,10 @@ for part in preloader_raw_a preloader_raw_b; do
     [ -L /dev/block/by-name/$part ] && ln -sf /dev/block/by-name/$part /dev/block/platform/bootdevice/by-name/$part
 done
 
-# 3. TEE Node Readiness
+# 4. TEE Node Readiness
 log_msg "Ensuring TEE node permissions..."
 chmod 0666 /dev/teepriv0 /dev/tee0 2>/dev/null
 chown system:system /dev/teepriv0 /dev/tee0 2>/dev/null
-
-# 4. Touch Module Fallback (Manual insmod for HIOS2 compatibility)
-log_msg "Loading touch modules (fallback sync)..."
-for mod in mtk-mbox.ko scp.ko mtk_rpmsg_mbox.ko mtk_tinysys_ipi.ko mtk-afe-external.ko xiaomi_tp.ko lct_tp.ko nt36528_spi.ko ft8057p_spi.ko; do
-    if [ -f "/lib/modules/$mod" ]; then
-        lsmod | grep -q "${mod%.ko}" || insmod "/lib/modules/$mod"
-    fi
-done
 
 # 5. VINTF manifest sync
 log_msg "Patching VINTF manifest..."
@@ -95,10 +87,7 @@ setprop twrp.vintf.ready 1
     start keystore2
     log_msg "Watcher thread finished."
 ) &
-WATCHER_PID=$!
-
-log_msg "--- TWRP DEBUG BOOT END (Waiting for watcher ${WATCHER_PID}) ---"
-wait $WATCHER_PID
+log_msg "--- TWRP DEBUG BOOT END (Watcher running in background) ---"
 exit 0
 # Persistence loop disabled to prevent instability
 # (Service monitoring should be handled by init.recovery.rc triggers)
