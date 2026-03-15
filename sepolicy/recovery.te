@@ -1,4 +1,13 @@
 # SELinux rules for TWRP recovery (Android 15)
+# Declare missing types to allow compilation
+type keystore2, domain;
+type hal_keymint_service, service_manager_type;
+type hal_gatekeeper_hwservice, hwservice_manager_type;
+type hal_remotelyprovisionedcomponent_service, service_manager_type;
+type keystore_crash_prop, property_type;
+type vendor_security_patch_level_prop, property_type;
+type vndbinder_device, dev_type;
+
 # Set recovery to permissive to bypass granular denials while maintaining buildability
 permissive recovery;
 
