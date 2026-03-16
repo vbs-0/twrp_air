@@ -108,7 +108,6 @@ rpmb-mtk.ko
 ufs-mediatek-mod.ko
 ufs-mediatek-dbg.ko
 blocktag.ko
-miev.ko
 mi-memory.ko
 pidmap.ko
 mtk-pmic-keys.ko
@@ -125,7 +124,7 @@ rt5133-regulator.ko
 mt6377-clkbuf.ko
 clkbuf.ko
 teeperf.ko
-mcDrvModule.ko
+mcdrvmodule.ko
 tee.ko
 mitee.ko
 mt6375-adc.ko
@@ -190,8 +189,6 @@ arm_dsu_pmu.ko
 uload_ind.ko
 load_track.ko
 sec.ko
-mi_rmap_efficiency.ko
-xm_smart_chg.ko
 lct_tp.ko
 nt36528_spi.ko
 xiaomi_tp.ko
