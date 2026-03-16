@@ -13,8 +13,6 @@ on init
     setprop sys.usb.configfs 1
     setprop sys.usb.ffs.aio_compat 1
     setprop crypto.ready 1
-    
-    setprop crypto.ready 1
 
     # Load thermal modules for CPU temperature display
     # insmod /lib/modules/thermal_interface.ko
@@ -87,9 +85,6 @@ on boot
     chmod 0664 /dev/xiaomi-touch
     chown system system /sys/class/touch/tp_dev/fod_status
     chmod 0664 /sys/class/touch/tp_dev/fod_status
-
-    # Load Touch modules via isolated service after core modules are stable
-    start load-touch-modules
 
 service touchfeature-hal-1-0 /vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service
     class main
@@ -168,27 +163,12 @@ on property:twrp.all.users.decrypted=true
     stop keymint-mitee
     stop gatekeeper-1-0
 
-on post-fs
-    start load-touch-modules
-
 on boot
     start health-hal-2-1
     start vendor.vibrator-default
     setprop sys.usb.config adb
-    # Xiaomi Touch Essentials
-    setprop sys.touch.status 1
-    setprop vendor.touch.status 1
-    setprop persist.vendor.touch.status 1
-    chmod 0660 /dev/input/event*
-    chown system system /dev/input/event*
     write /dev/kmsg "TWRP_INIT: on boot completed"
 
-service load-touch-modules /system/bin/modprobe --all=/lib/modules/modules.load.touch --dirname=/lib/modules
-    user root
-    group root system
-    disabled
-    oneshot
-    seclabel u:r:recovery:s0
 
 service debug_boot /system/bin/sh /debug_boot.sh
     user root
