@@ -27,7 +27,7 @@ on post-fs
     symlink /dev/block/mapper/pl_b /dev/block/by-name/preloader_raw_b
 
 
-# TWRP Essentials
+# TWRP Hook
 on post-fs
     start debug_boot
 
