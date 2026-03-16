@@ -191,9 +191,3 @@ load_track.ko
 sec.ko
 scp.ko
 binder_gki.ko
-mtk-dvfsrc-helper.ko
-mtk-dvfsrc-devfreq.ko
-mtk_slbc.ko
-vcp_status.ko
-mediatek-cpufreq-hw.ko
-mtk-swpm-perf-arm-pmu.ko
