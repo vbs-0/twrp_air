@@ -173,6 +173,10 @@ on boot
     start vendor.vibrator-default
     start load-touch-modules
     setprop sys.usb.config adb
+    # Xiaomi Touch Essentials
+    setprop sys.touch.status 1
+    chmod 0660 /dev/input/event*
+    chown system system /dev/input/event*
     write /dev/kmsg "TWRP_INIT: on boot completed"
 
 service load-touch-modules /system/bin/modprobe --all=/lib/modules/modules.load.touch --dirname=/lib/modules
