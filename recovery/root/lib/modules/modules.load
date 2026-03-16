@@ -191,11 +191,6 @@ arm_dsu_pmu.ko
 load_track.ko
 uload_ind.ko
 sec.ko
-xiaomi_tp.ko
-lct_tp.ko
-mt6377-accdet.ko
 mtk-afe-external.ko
 scp.ko
-ft8057p_spi.ko
-nt36528_spi.ko
 binder_gki.ko

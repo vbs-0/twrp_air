@@ -171,8 +171,16 @@ on property:twrp.all.users.decrypted=true
 on boot
     start health-hal-2-1
     start vendor.vibrator-default
+    start load-touch-modules
     setprop sys.usb.config adb
     write /dev/kmsg "TWRP_INIT: on boot completed"
+
+service load-touch-modules /system/bin/modprobe --all=/lib/modules/modules.load.touch --dirname=/lib/modules
+    user root
+    group root system
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
 
 service debug_boot /system/bin/sh /debug_boot.sh
     user root
@@ -180,7 +188,3 @@ service debug_boot /system/bin/sh /debug_boot.sh
     disabled
     oneshot
     seclabel u:r:recovery:s0
-
-# Removed redundant debug_boot trigger (started in post-fs)
-
-# Removed load-touch-modules (redundant with modules.load)

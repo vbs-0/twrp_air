@@ -46,14 +46,12 @@
 /lib/modules/emi.ko: /lib/modules/emi-mpu.ko /lib/modules/aee_aed.ko
 /lib/modules/extcon-mtk-usb.ko: /lib/modules/tcpc_class.ko /lib/modules/pd_dbg_info.ko
 /lib/modules/extdev_io_class.ko:
-/lib/modules/ft8057p_spi.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/mt6377-accdet.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
 /lib/modules/fusb304.ko: /lib/modules/mux_switch.ko
 /lib/modules/i2c-mt65xx.ko: /lib/modules/pinctrl-mtk-common-v2_debug.ko /lib/modules/pinctrl-mtk-v2.ko
 /lib/modules/iommu_debug.ko: /lib/modules/aee_aed.ko
 /lib/modules/iommu_secure.ko:
 /lib/modules/iommu_test.ko:
 /lib/modules/irq-dbg.ko:
-/lib/modules/lct_tp.ko:
 /lib/modules/leds-mtk-disp.ko: /lib/modules/mediatek-drm-gateic.ko /lib/modules/mediatek-drm.ko /lib/modules/spi_slave.ko /lib/modules/mtk_disp_notify.ko /lib/modules/mmqos-common.ko /lib/modules/mtk-mmdvfs-debug.ko /lib/modules/mtk-mmdvfs-v3.ko /lib/modules/mtk-mmdvfs-ftrace.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko /lib/modules/mtk-mmdvfs.ko /lib/modules/mtk-mml.ko /lib/modules/system_heap.ko /lib/modules/mtk_sync.ko /lib/modules/mtk_slbc.ko /lib/modules/mtk-icc-core.ko /lib/modules/rt4831a_drv.ko /lib/modules/leds-mtk.ko /lib/modules/mtk_dramc.ko /lib/modules/tinysys-scmi.ko /lib/modules/mtk-cmdq-drv-ext.ko /lib/modules/device-apc-common.ko /lib/modules/vcp_status.ko /lib/modules/mmprofile.ko /lib/modules/irq-dbg.ko /lib/modules/iommu_debug.ko /lib/modules/mtk-smi-dbg.ko /lib/modules/emi.ko /lib/modules/emi-mpu.ko /lib/modules/mtk-smi.ko /lib/modules/clk-common.ko /lib/modules/mtk_panel_ext.ko /lib/modules/aee_aed.ko /lib/modules/mrdump.ko
 /lib/modules/leds-mtk-pwm.ko: /lib/modules/mediatek-drm.ko /lib/modules/spi_slave.ko /lib/modules/mtk_disp_notify.ko /lib/modules/mmqos-common.ko /lib/modules/mtk-mmdvfs-debug.ko /lib/modules/mtk-mmdvfs-v3.ko /lib/modules/mtk-mmdvfs-ftrace.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko /lib/modules/mtk-mmdvfs.ko /lib/modules/mtk-mml.ko /lib/modules/system_heap.ko /lib/modules/mtk_sync.ko /lib/modules/mtk_slbc.ko /lib/modules/mtk-icc-core.ko /lib/modules/leds-mtk.ko /lib/modules/mtk_dramc.ko /lib/modules/tinysys-scmi.ko /lib/modules/mtk-cmdq-drv-ext.ko /lib/modules/device-apc-common.ko /lib/modules/vcp_status.ko /lib/modules/mmprofile.ko /lib/modules/irq-dbg.ko /lib/modules/iommu_debug.ko /lib/modules/mtk-smi-dbg.ko /lib/modules/emi.ko /lib/modules/emi-mpu.ko /lib/modules/mtk-smi.ko /lib/modules/clk-common.ko /lib/modules/mtk_panel_ext.ko /lib/modules/aee_aed.ko /lib/modules/mrdump.ko
 /lib/modules/leds-mtk.ko:
@@ -76,7 +74,6 @@
 /lib/modules/mt6375-auxadc.ko:
 /lib/modules/mt6375-battery.ko: /lib/modules/pmic_lbat_service.ko /lib/modules/mtk_chg_type_det.ko /lib/modules/mtk_charger_framework.ko /lib/modules/sc8989x_charger.ko /lib/modules/charger_class.ko /lib/modules/adapter_class.ko /lib/modules/mtk_charger_algorithm_class.ko /lib/modules/mtk_disp_notify.ko /lib/modules/tcpc_class.ko /lib/modules/pd_dbg_info.ko /lib/modules/aee_aed.ko
 /lib/modules/mt6375.ko:
-/lib/modules/mt6377-accdet.ko:
 /lib/modules/mt6377-battery.ko: /lib/modules/pmic_lbat_service.ko /lib/modules/mtk_chg_type_det.ko /lib/modules/mtk_charger_framework.ko /lib/modules/sc8989x_charger.ko /lib/modules/charger_class.ko /lib/modules/adapter_class.ko /lib/modules/mtk_charger_algorithm_class.ko /lib/modules/mtk_disp_notify.ko /lib/modules/tcpc_class.ko /lib/modules/pd_dbg_info.ko
 /lib/modules/mt6377-clkbuf.ko: /lib/modules/clkbuf.ko
 /lib/modules/mt6377-regulator.ko:
@@ -136,7 +133,6 @@
 /lib/modules/mtk_wdt.ko:
 /lib/modules/mtu3.ko:
 /lib/modules/mux_switch.ko:
-/lib/modules/nt36528_spi.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
 /lib/modules/nvmem_mtk-devinfo.ko:
 /lib/modules/panel-alpha-jdi-nt36672e-cphy-vdo-no-dsc.ko: /lib/modules/rt4831a_drv.ko /lib/modules/leds-mtk.ko /lib/modules/mtk_panel_ext.ko
 /lib/modules/panel-alpha-jdi-nt36672e-cphy-vdo-wo-dsc-60hz.ko: /lib/modules/rt4831a_drv.ko /lib/modules/leds-mtk.ko /lib/modules/mtk_panel_ext.ko
@@ -196,6 +192,5 @@
 /lib/modules/usb_meta.ko: /lib/modules/bootprof.ko
 /lib/modules/vcp_status.ko:
 /lib/modules/xhci-mtk-hcd-v2.ko:
-/lib/modules/xiaomi_tp.ko:
 /lib/modules/zram.ko: /lib/modules/zsmalloc.ko
 /lib/modules/zsmalloc.ko:
