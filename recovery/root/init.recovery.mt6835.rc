@@ -1,6 +1,11 @@
 import /init.recovery.project.rc
 
 on init
+    symlink /system/bin /bin
+    symlink /system/etc /etc
+    symlink /system/system_ext /system_ext
+    symlink /data/user_de/0/com.android.shell/files/bugreports /bugreports
+    symlink /sys/kernel/debug /d
     setprop sys.usb.configfs 1
     setprop sys.usb.controller "11201000.usb0"
 
