@@ -2,7 +2,7 @@
 # Copyright (C) 2014-2023 The Team Win LLC
 # SPDX-License-Identifier: Apache-2.0
 
-DEVICE_PATH := device/xiaomi/air_hios2
+DEVICE_PATH := device/xiaomi/air
 
 # For building with minimal manifest
 ALLOW_MISSING_DEPENDENCIES := true
