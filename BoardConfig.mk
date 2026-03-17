@@ -14,8 +14,9 @@ BUILD_BROKEN_NINJA_USES_ENV_VARS += RTIC_MPGEN
 BUILD_BROKEN_PLUGIN_VALIDATION := soong-libaosprecovery_defaults soong-libguitwrp_defaults soong-libminuitwrp_defaults soong-vold_defaults
 
 BUILD_BROKEN_SEP_NEVERALLOWS := true
+SELINUX_IGNORE_NEVERALLOWS := true
 
-BOARD_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/recovery
+BOARD_RECOVERY_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/recovery
 
 # Architecture
 TARGET_ARCH := arm64
