@@ -37,6 +37,9 @@ on fs
 
 
 on post-fs
+    wait /dev/block/by-name/metadata
+    mount f2fs /dev/block/by-name/metadata /metadata noatime nosuid nodev discard wait,check,formattable,first_stage_mount
+
     # Create keystore directory
     mkdir /tmp/keystore 0775 root root
     chown root root /tmp/keystore
