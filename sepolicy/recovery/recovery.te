@@ -1,0 +1,4 @@
+allow recovery vold_metadata_file:dir { search };
+allow recovery vold_metadata_file:file { read open getattr };
+allow recovery keystore_listen_prop:file { read open getattr map };
+allow recovery keystore_service:service_manager { add find };
