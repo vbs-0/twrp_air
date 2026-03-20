@@ -47,3 +47,6 @@
 /lib/modules/mtk-scp-audio.ko: /lib/modules/audio_ipi.ko /lib/modules/mtk-scp-audiocommon.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/adsp.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
 /lib/modules/mtk-vcodec-dec-v1.ko: /lib/modules/vcp.ko /lib/modules/mtk-vcodec-common.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
 /lib/modules/fhctl.ko: /lib/modules/mcupm.ko /lib/modules/gpueb.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
+
+/lib/modules/mali_kbase_mt6835.ko:
+/lib/modules/mtk_disp_notify.ko:
