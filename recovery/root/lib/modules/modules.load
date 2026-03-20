@@ -105,6 +105,7 @@ rpmb-mtk.ko
 ufs-mediatek-mod.ko
 ufs-mediatek-dbg.ko
 blocktag.ko
+miev.ko
 mi-memory.ko
 pidmap.ko
 mtk-pmic-keys.ko
@@ -173,3 +174,5 @@ emi.ko
 emi-mpu.ko
 mediatek-cpufreq-hw.ko
 mtk-swpm-perf-arm-pmu.ko
+mi_rmap_efficiency.ko
+xm_smart_chg.ko
