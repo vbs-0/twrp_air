@@ -54,7 +54,7 @@ TARGET_BOARD_PLATFORM := mt6835
 TARGET_KERNEL_ARCH := arm64
 TARGET_KERNEL_HEADER_ARCH := arm64
 
-BOARD_VENDOR_CMDLINE := bootopt=64S3,32N2,64N2 ramoops.mem_address=0x48090000 ramoops.mem_size=0xe0000 ramoops.pmsg_size=0x10000 ramoops.console_size=0x40000
+BOARD_VENDOR_CMDLINE := \"bootopt=64S3,32N2,64N2 ramoops.mem_address=0x48090000 ramoops.mem_size=0xe0000 ramoops.pmsg_size=0x10000 ramoops.console_size=0x40000\"
 BOARD_PAGE_SIZE           := 4096
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_KERNEL_BASE         := 0x3fff8000
