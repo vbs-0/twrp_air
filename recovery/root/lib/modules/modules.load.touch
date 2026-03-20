@@ -1,3 +1,7 @@
+/lib/modules/mcupm.ko
+/lib/modules/sspm_v3.ko
+/lib/modules/vcp.ko
+/lib/modules/fhctl.ko
 /lib/modules/mtk_rpmsg_mbox.ko
 /lib/modules/mtk_tinysys_ipi.ko
 /lib/modules/mtk-afe-external.ko
