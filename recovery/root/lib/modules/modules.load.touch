@@ -1,13 +1,1 @@
-/lib/modules/mcupm.ko
-/lib/modules/sspm_v3.ko
-/lib/modules/vcp.ko
-/lib/modules/fhctl.ko
-/lib/modules/mtk_rpmsg_mbox.ko
-/lib/modules/mtk_tinysys_ipi.ko
-/lib/modules/mtk-afe-external.ko
-/lib/modules/mtk_disp_notify.ko
-/lib/modules/scp.ko
-/lib/modules/lct_tp.ko
-/lib/modules/xiaomi_tp.ko
-/lib/modules/ft8057p_spi.ko
-/lib/modules/nt36528_spi.ko
+# ZERO DRIVER DIAGNOSTIC BUILD
