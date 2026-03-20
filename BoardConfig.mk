@@ -54,7 +54,7 @@ TARGET_BOARD_PLATFORM := mt6835
 TARGET_KERNEL_ARCH := arm64
 TARGET_KERNEL_HEADER_ARCH := arm64
 
-BOARD_VENDOR_CMDLINE := \"bootopt=64S3,32N2,64N2 ramoops.mem_address=0x48090000 ramoops.mem_size=0xe0000 ramoops.pmsg_size=0x10000 ramoops.console_size=0x40000\"
+BOARD_VENDOR_CMDLINE := bootopt=64S3,32N2,64N2
 BOARD_PAGE_SIZE           := 4096
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_KERNEL_BASE         := 0x3fff8000
@@ -70,6 +70,10 @@ TARGET_NO_KERNEL_OVERRIDE := true
 BOARD_MKBOOTIMG_ARGS += \
 	--dtb $(TARGET_PREBUILT_DTB) \
 	--vendor_cmdline $(BOARD_VENDOR_CMDLINE) \
+	--vendor_cmdline ramoops.mem_address=0x48090000 \
+	--vendor_cmdline ramoops.mem_size=0xe0000 \
+	--vendor_cmdline ramoops.pmsg_size=0x10000 \
+	--vendor_cmdline ramoops.console_size=0x40000 \
 	--pagesize $(BOARD_PAGE_SIZE) --board "" \
 	--kernel_offset $(BOARD_KERNEL_OFFSET) \
 	--ramdisk_offset $(BOARD_RAMDISK_OFFSET) \
