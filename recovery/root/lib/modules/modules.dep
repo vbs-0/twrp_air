@@ -50,3 +50,11 @@
 
 /lib/modules/mali_kbase_mt6835.ko:
 /lib/modules/mtk_disp_notify.ko:
+
+/lib/modules/mcupm.ko:
+
+/lib/modules/vcp.ko:
+
+/lib/modules/sspm_v3.ko:
+
+/lib/modules/fhctl.ko:
