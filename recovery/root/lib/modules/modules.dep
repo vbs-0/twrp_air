@@ -201,6 +201,8 @@
 /lib/modules/lct_tp.ko:
 /lib/modules/hf_manager.ko: /lib/modules/lct_tp.ko
 /lib/modules/nt36528_spi.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
+/lib/modules/ft8057p_spi.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
+/lib/modules/mt6377-accdet.ko: /lib/modules/xiaomi_tp.ko /lib/modules/lct_tp.ko /lib/modules/scp.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
 /lib/modules/mtk_gpufreq_wrapper.ko:
 /lib/modules/thermal_interface.ko: /lib/modules/mtk_dramc.ko /lib/modules/mtk_gpufreq_wrapper.ko
 /lib/modules/soc_temp_lvts.ko: /lib/modules/thermal_interface.ko /lib/modules/scp.ko /lib/modules/mtk_dramc.ko /lib/modules/mtk_gpufreq_wrapper.ko /lib/modules/mtk-afe-external.ko /lib/modules/mtk_tinysys_ipi.ko /lib/modules/mtk_rpmsg_mbox.ko /lib/modules/mtk-mbox.ko
