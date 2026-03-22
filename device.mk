@@ -57,6 +57,7 @@ PRODUCT_PACKAGES_DEBUG += \
 TW_INCLUDE_FASTBOOTD := true
 
 PRODUCT_PACKAGES += \
+    android.hardware.security.rkp-V3-ndk
     android.hardware.fastboot@1.0-impl-mock
 
 # Health Hal
